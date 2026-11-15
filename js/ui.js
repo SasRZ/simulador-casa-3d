@@ -175,6 +175,7 @@ export class UI {
     $('opt-porch').onchange = () => { this.app.ctx.setPorch($('opt-porch').value); this.app.nav.invalidateTargets(); };
     $('opt-porch-glass').onchange = () => { this.app.ctx.setPorchGlass($('opt-porch-glass').checked); this.app.nav.invalidateTargets(); };
     const carport = () => { $('row-carport-len').hidden = !$('opt-carport').value; this.app.ctx.setCarport($('opt-carport').value, $('opt-carport-len').value); this.app.nav.invalidateTargets(); };
+    $('opt-wallplants').onchange = () => { this.app.ctx.setWallPlants($('opt-wallplants').value); this.app.nav.invalidateTargets(); };
     const carsRows = () => { const n = +$('opt-cars').value; ['row-cars-pos', 'row-cars-rot', 'cars-info'].forEach((id) => { $(id).hidden = !n; }); };
     $('opt-cars').onchange = () => { this.app.ctx.setCars(+$('opt-cars').value); carsRows(); this.app.nav.invalidateTargets(); };
     $('opt-cars-pos').onchange = () => { this.app.ctx.cars.preset($('opt-cars-pos').value); this.app.nav.invalidateTargets(); };

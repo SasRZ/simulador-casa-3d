@@ -8,6 +8,7 @@ import { buildSite } from './build_site.js';
 import { buildSolar } from './build_solar.js';
 import { buildCarport } from './build_carport.js';
 import { buildCars } from './build_cars.js';
+import { buildGreenery } from './build_greenery.js';
 import { buildFurniture } from './build_furniture.js';
 import { buildExterior } from './build_exterior.js';
 import { createEnvironment } from './environment.js';
@@ -41,7 +42,7 @@ async function boot() {
   msg('cocina y baños'); await nextFrame();
   buildKitchen(ctx); buildIsland(ctx); buildBaths(ctx);
   msg('parcela, porche y piscina'); await nextFrame();
-  buildSite(ctx); buildCarport(ctx); buildCars(ctx);
+  buildSite(ctx); buildCarport(ctx); buildCars(ctx); buildGreenery(ctx);
 
   msg('mobiliario'); await nextFrame();
   buildFurniture(ctx);
