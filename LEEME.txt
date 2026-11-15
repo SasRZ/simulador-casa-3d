@@ -1,0 +1,6 @@
+Simulador 3D - Villa 04 Villas del Sur
+1. Extrae el zip (clic derecho > Extraer todo).
+2. Abre la carpeta mi-simulador y haz doble clic en "Iniciar simulador.bat".
+   Si Windows avisa: "Mas informacion" > "Ejecutar de todas formas".
+3. Se abre el navegador en http://localhost:8765/. No cierres la ventana negra mientras lo uses.
+Alternativa (cualquier sistema con Python): en esta carpeta, python -m http.server 8765 y abre http://localhost:8765/
