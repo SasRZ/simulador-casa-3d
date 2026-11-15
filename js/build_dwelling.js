@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { CFG } from './config.js';
 import {
   WALLS, WINDOWS, SLIDER, DOORS, WARDROBES, FLOORS, TILED, INTERIOR, CLADDING, CEILINGS, LOW_CEILINGS, FASCIAS,
-  SPOTS, LOW_SPOT_ROOMS, GRILLES, ROOFS,
+  SPOTS, LOW_SPOT_ROOMS, GRILLES, ROOFS, ACCENTS,
 } from './plan.js';
 import { box, rectXZ, wallPieces, prism, angleOf, shortAngleDelta } from './helpers.js';
 
@@ -56,7 +56,8 @@ function faceMat(M, x, z) {
   const inside = INTERIOR.some((r) => inR(r, x, z));
   if (!inside) return CLADDING.some((c) => x > c.x0 && x < c.x1 && z > c.z0 && z < c.z1) ? M.cladding : M.ext;
   const t = TILED.find((q) => inR(q.r, x, z));
-  return t ? M[t.mat] : M.wall;
+  if (t) return M[t.mat];
+  return ACCENTS.some((a) => inR(a.r, x, z)) ? M.accent : M.wall;
 }
 
 // ---------------------------------------------------------------------------
@@ -68,6 +69,7 @@ export function buildDwelling(ctx) {
   const cuts = new Set();
   [...INTERIOR, ...TILED.map((t) => t.r)].forEach((r) => r.forEach((v) => cuts.add(v)));
   CLADDING.forEach((c) => [c.x0, c.x1, c.z0, c.z1].forEach((v) => cuts.add(v)));
+  ACCENTS.forEach((a) => a.r.forEach((v) => cuts.add(v)));
   for (const w of WALLS) {
     const ops = (w.open || []).map((o) => {
       if (o[2] !== 'WIN') return o;
@@ -327,14 +329,12 @@ function buildWardrobe(ctx, w) {
 export function buildHallSlider(ctx) {
   const { M, G } = ctx;
   const grp = new THREE.Group(); grp.name = 'corredera-distribuidor'; grp.visible = false; G.structure.add(grp);
-  const x0 = 5.326, x1 = 6.427, z0 = 21.017, z1 = 21.115, hd = 2.10, ceil = H.ceiling;
-  // dintel y tabique de remate hasta el techo
-  grp.add(worldBox(x0, hd, z0, x1, ceil, z1, M.wall));
-  grp.add(worldBox(6.326, 0, z1, 6.427, ceil, 21.715, M.wall));
-  // carril y cajón sobre la hoja (cara del salón)
+  // Hueco limpio de 1,00 m en la boca del distribuidor, alineado con el muro norte del dormitorio 4
+  const x0 = 5.326, x1 = 6.326, z0 = 21.715, z1 = 21.816, hd = 2.10, top = H.lowCeiling;
+  grp.add(worldBox(x0, hd, z0, x1, top, z1, M.wall));                 // dintel hasta el falso techo
+  // carril y cajón por la cara del vestíbulo; la hoja abierta queda delante del muro del dormitorio 4
   const zl = z0 - 0.035, L = x1 - x0 + 0.08;
-  grp.add(box(x0 - L, hd, zl - 0.03, x1 + 0.04, hd + 0.08, zl + 0.03, M.white));
-  // hoja: lisa lacada blanca o con vidriera
+  grp.add(box(x0 - 0.04, hd, zl - 0.03, x1 + L, hd + 0.08, zl + 0.03, M.white));
   const leaf = new THREE.Group(); leaf.position.set(x0 - 0.04, 0, zl); grp.add(leaf);
   const solid = box(0, 0.01, -0.02, L, hd - 0.01, 0.02, M.door);
   const glazed = new THREE.Group();
@@ -342,13 +342,12 @@ export function buildHallSlider(ctx) {
   [[0.01, 0.10], [hd - 0.10, hd - 0.01], [0.95, 1.03]].forEach(([y0, y1]) => glazed.add(box(0.10, y0, -0.02, L - 0.10, y1, 0.02, M.door)));
   [[0.10, 0.95], [1.03, hd - 0.10]].forEach(([y0, y1]) => { const p = new THREE.Mesh(new THREE.PlaneGeometry(L - 0.2, y1 - y0), M.glass); p.position.set(L / 2, (y0 + y1) / 2, 0); glazed.add(p); });
   leaf.add(solid, glazed);
-  const hnd = box(0.05, 0.95, 0.02, 0.07, 1.20, 0.035, M.chrome); leaf.add(hnd);
+  const hnd = box(0.05, 0.95, -0.035, 0.07, 1.20, -0.02, M.chrome); leaf.add(hnd);
   const col = { x0, z0: zl - 0.03, x1, z1 };
-  const op = new Openable('Puerta corredera vestíbulo–distribuidor', (e) => { leaf.position.x = x0 - 0.04 - e * (L - 0.12); }, col);
+  const op = new Openable('Puerta corredera vestíbulo–distribuidor', (e) => { leaf.position.x = x0 - 0.04 + e * (L - 0.12); }, col);
   op.speed = 1.4;
   addPickable(ctx, leaf, op); ctx.openables.push(op);
   ctx.dynColliders.push({ box: col, fn: () => grp.visible && op.blocking });
-  ctx.dynColliders.push({ box: { x0: 6.326, z0: z1, x1: 6.427, z1: 21.715 }, fn: () => grp.visible });
   ctx.setHallSlider = (k) => {
     grp.visible = !!k;
     solid.visible = k === 'lisa'; glazed.visible = k === 'vidriera';

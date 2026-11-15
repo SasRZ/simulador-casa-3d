@@ -18,7 +18,8 @@ const nextFrame = () => new Promise((r) => setTimeout(r, 16));
 async function boot() {
   const canvas = document.getElementById('c');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const touch = document.body.classList.contains('touch');
+  renderer.setPixelRatio(Math.min(devicePixelRatio, touch ? 1.5 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.6;
@@ -52,7 +53,8 @@ async function boot() {
   app.env = createEnvironment(app);
   app.nav = new Navigation(app);
   app.ui = new UI(app);
-  app.env.setShadows(true, true);
+  app.env.setShadows(true, !touch);
+  if (touch) { document.getElementById('opt-hq').checked = false; app.ui.togglePanel(true); }
   app.ui.applyTime();
   window.__app = app;   // útil para depurar desde la consola
 
@@ -71,7 +73,7 @@ async function boot() {
       hoverT = 0;
       const h = app.nav.hover();
       hint.hidden = !h;
-      if (h) hint.textContent = `${h.t > 0.5 ? 'Cerrar' : 'Abrir'}: ${h.name}  (clic o E)`;
+      if (h) hint.textContent = `${h.t > 0.5 ? 'Cerrar' : 'Abrir'}: ${h.name}  ${touch ? '(toca)' : '(clic o E)'}`;
     }
     renderer.render(scene, app.nav.camera);
   });

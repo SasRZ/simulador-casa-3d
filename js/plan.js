@@ -138,6 +138,15 @@ export const TILED = [
   { r: [0.056, 15.760, 1.905, 18.112], mat: 'tileB2' },
   { r: [0.056, 25.245, 1.905, 27.195], mat: 'tileB2' },
 ];
+// Paredes de acento (zona de prueba delante de la cara del muro): pared de la TV del salón
+// y paredes de los cabeceros de los dormitorios
+export const ACCENTS = [
+  { name: 'Salón · pared de la TV', r: [2.18, 15.0, 2.30, 21.0] },
+  { name: 'Dormitorio 1 · cabecero', r: [2.18, 26.2, 2.30, 30.4] },
+  { name: 'Dormitorio 2 · cabecero', r: [10.00, 27.62, 10.12, 30.41] },
+  { name: 'Dormitorio 3 · cabecero', r: [7.0, 27.40, 10.72, 27.51] },
+  { name: 'Dormitorio 4 · cabecero', r: [7.0, 21.82, 10.72, 21.93] },
+];
 // Techo normal (2,70) y falso techo (2,50)
 export const CEILINGS = [{ r: [2.175, 14.754, 10.726, 30.418], low: false }];
 export const LOW_CEILINGS = [

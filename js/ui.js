@@ -28,7 +28,7 @@ export class UI {
     $('mode-seg').addEventListener('click', (e) => { const m = e.target.dataset?.mode; if (m) this.app.nav.setMode(m); });
     $('panel-toggle').onclick = () => this.togglePanel();
   }
-  togglePanel() { $('panel').classList.toggle('hidden'); }
+  togglePanel(force) { const p = $('panel'); p.classList.toggle('hidden', force); $('panel-toggle').textContent = p.classList.contains('hidden') ? (document.body.classList.contains('touch') ? '☰' : '▶') : (document.body.classList.contains('touch') ? '✕' : '◀'); }
   onMode(m) {
     [...$('mode-seg').children].forEach((b) => b.classList.toggle('on', b.dataset.mode === m));
     $('crosshair').hidden = m !== 'walk';
@@ -38,6 +38,14 @@ export class UI {
   updateHelp() {
     const n = this.app.nav, h = $('help');
     let t = '';
+    const touch = document.body.classList.contains('touch');
+    if (touch) {
+      if (n.measureOn) t = '📏 Toca dos puntos para medir';
+      else if (n.mode === 'walk') t = 'Joystick para andar · arrastra para mirar · toca puertas y ventanas';
+      else if (n.mode === 'orbit') t = 'Un dedo gira · dos dedos zoom y desplazar · toca puertas y ventanas';
+      else t = 'Arrastra para desplazar · pellizca para zoom';
+      h.textContent = t; return;
+    }
     if (n.measureOn) t = '📏 Medir: haz clic en dos puntos · M para salir';
     else if (n.mode === 'walk') t = n.locked ? 'WASD mover · Shift correr · ratón mirar · clic o E abrir/cerrar · Esc soltar ratón' : 'Haz clic en la escena para controlar el ratón · arrastra para mirar · WASD para moverte';
     else if (n.mode === 'orbit') t = 'Arrastra para girar · rueda para zoom · botón derecho para desplazar · clic en una puerta o ventana para abrirla';
@@ -148,14 +156,7 @@ export class UI {
     $('eye').oninput = () => { const v = +$('eye').value; this.app.nav.setEye(v); $('eye-out').textContent = `${v.toFixed(2).replace('.', ',')} m`; };
     $('opt-floor').onchange = () => this.app.ctx.setFloor($('opt-floor').value);
     $('opt-hall-door').onchange = () => { this.app.ctx.setHallSlider($('opt-hall-door').value); this.app.nav.invalidateTargets(); };
-    const paint = () => {
-      const ctx = this.app.ctx, M = ctx.M, w = $('opt-wall-color').value, c = $('opt-ceil-color').value;
-      ctx.paintWall = w ? parseInt(w, 16) : null;
-      if (ctx.paintWall != null) M.wall.color.setHex(ctx.paintWall);
-      else ctx.furn.setStyle(ctx.furn.selection.style);   // vuelve al color del estilo
-      M.ceiling.color.setHex(c === 'same' ? M.wall.color.getHex() : parseInt(c, 16));
-    };
-    $('opt-wall-color').onchange = paint; $('opt-ceil-color').onchange = paint;
+    this._paint();
     $('opt-kitchen').onchange = () => { G.kitchen.visible = $('opt-kitchen').checked; this.app.nav.invalidateTargets(); };
     $('opt-porch').onchange = () => { this.app.ctx.setPorch($('opt-porch').value); this.app.nav.invalidateTargets(); };
     $('opt-porch-glass').onchange = () => { this.app.ctx.setPorchGlass($('opt-porch-glass').checked); this.app.nav.invalidateTargets(); };
@@ -174,13 +175,68 @@ export class UI {
   }
 
 
+  // ---------------------------------------------------------------- paleta de paredes y techo
+  _paint() {
+    const ctx = this.app.ctx, M = ctx.M;
+    const COLORS = [
+      ['f7f6f2', 'Blanco roto'], ['ffffff', 'Blanco puro'], ['efe9df', 'Lino'], ['e6dccb', 'Beige arena'], ['ddd5c8', 'Greige'],
+      ['d9d8d4', 'Gris perla'], ['b9b6b0', 'Gris piedra'], ['8f8a83', 'Topo'], ['4a4f54', 'Gris antracita'],
+      ['d4ddcc', 'Verde salvia claro'], ['a9b8a0', 'Verde salvia'], ['6f8068', 'Verde oliva'],
+      ['dbe3e8', 'Azul niebla'], ['9fb2c0', 'Azul grisáceo'], ['2f4a63', 'Azul marino'],
+      ['f0dccf', 'Terracota suave'], ['c98b6b', 'Terracota'], ['f2e3c2', 'Amarillo vainilla'], ['e9d1d6', 'Rosa empolvado'], ['b85c5c', 'Rojo teja'],
+    ];
+    // [nombre, paredes, acento, techo]  ('' = según el estilo)
+    const PALETTES = [
+      ['Según el estilo', '', '', 'ffffff'],
+      ['Blanco (memoria)', 'f7f6f2', 'none', 'ffffff'],
+      ['Arena y terracota', 'efe9df', 'c98b6b', 'ffffff'],
+      ['Greige y topo', 'ddd5c8', '8f8a83', 'f7f6f2'],
+      ['Perla y antracita', 'd9d8d4', '4a4f54', 'ffffff'],
+      ['Lino y salvia', 'efe9df', 'a9b8a0', 'ffffff'],
+      ['Niebla y marino', 'dbe3e8', '2f4a63', 'ffffff'],
+      ['Rosa y teja', 'f0dccf', 'b85c5c', 'f7f6f2'],
+    ];
+    const opts = (extra) => extra + COLORS.map(([v, n]) => `<option value="${v}">${n}</option>`).join('');
+    $('opt-wall-color').innerHTML = opts('<option value="">Según el estilo</option>');
+    $('opt-accent-color').innerHTML = opts('<option value="">Según el estilo</option><option value="none">Sin acento (como el resto)</option>');
+    $('opt-ceil-color').innerHTML = opts('');
+    $('opt-ceil-color').value = 'ffffff';
+    const hex = (v) => parseInt(v, 16);
+    this.applyPaint = () => {
+      const w = $('opt-wall-color').value, a = $('opt-accent-color').value, c = $('opt-ceil-color').value;
+      ctx.paintWall = w ? hex(w) : null;
+      if (ctx.paintWall != null) M.wall.color.setHex(ctx.paintWall);
+      else ctx.furn.setStyle(ctx.furn.selection.style);
+      const st = STYLES[ctx.furn.selection.style];
+      if (a === 'none') M.accent.color.copy(M.wall.color);
+      else if (a) M.accent.color.setHex(hex(a));
+      else M.accent.color.setHex(st ? st.colors.sage : 0xa9b8a0);
+      M.ceiling.color.setHex(hex(c || 'ffffff'));
+    };
+    const box = $('palettes');
+    PALETTES.forEach(([name, wall, accent, ceil], i) => {
+      const b = document.createElement('button');
+      const sw = (v) => `<i style="background:${v && v !== 'none' ? '#' + v : 'repeating-linear-gradient(45deg,#ccc 0 3px,#999 3px 6px)'}"></i>`;
+      b.innerHTML = `<span class="chips3">${sw(wall)}${sw(accent === 'none' ? wall : accent)}${sw(ceil)}</span>${name}`;
+      b.onclick = () => {
+        $('opt-wall-color').value = wall; $('opt-accent-color').value = accent; $('opt-ceil-color').value = ceil;
+        [...box.children].forEach((x) => x.classList.toggle('on', x === b)); this.applyPaint();
+      };
+      if (i === 0) b.classList.add('on');
+      box.appendChild(b);
+    });
+    const custom = () => { [...box.children].forEach((x) => x.classList.remove('on')); this.applyPaint(); };
+    $('opt-wall-color').onchange = custom; $('opt-accent-color').onchange = custom; $('opt-ceil-color').onchange = custom;
+    this.applyPaint();
+  }
+
   // ---------------------------------------------------------------- amueblado
   _furniture() {
     const fu = this.app.ctx.furn;
     // estilo
     $('furn-style').innerHTML = Object.entries(STYLES).map(([k, st]) => `<option value="${k}">${st.name}</option>`).join('');
     const styleInfo = () => { $('furn-style-info').textContent = STYLES[$('furn-style').value].note; };
-    $('furn-style').onchange = () => { fu.setStyle($('furn-style').value); styleInfo(); if ($('opt-ceil-color').value === 'same') this.app.ctx.M.ceiling.color.copy(this.app.ctx.M.wall.color); this.app.nav.invalidateTargets(); };
+    $('furn-style').onchange = () => { fu.setStyle($('furn-style').value); styleInfo(); this.applyPaint?.(); this.app.nav.invalidateTargets(); };
     styleInfo();
     // uso de cada estancia
     const box = $('furn-uses');

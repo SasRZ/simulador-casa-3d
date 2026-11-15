@@ -33,6 +33,7 @@ export class Navigation {
     this.topCtl.enableRotate = false; this.topCtl.screenSpacePanning = true;
     this.topCtl.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
     this.topCtl.enabled = false; this.topCtl.zoomToCursor = true;
+    this.topCtl.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_PAN };
     this.topZoom = 1; this.ortho.zoom = 1;
 
     // --- Caminar ---
@@ -50,7 +51,9 @@ export class Navigation {
     this.mgroup = new THREE.Group(); app.scene.add(this.mgroup);
     this.mline = null;
 
+    this.joy = { x: 0, y: 0 };
     this._bind();
+    this._bindJoystick();
     this.resize();
   }
 
@@ -71,27 +74,55 @@ export class Navigation {
       this.app.ui?.updateHelp();
     });
     document.addEventListener('mousemove', (e) => {
-      if (this.mode !== 'walk') return;
-      if (this.locked) { this._look(e.movementX, e.movementY); }
-      else if (this._drag) {
-        const dx = e.clientX - this._drag.x, dy = e.clientY - this._drag.y;
-        if (Math.abs(dx) + Math.abs(dy) > 3) this._drag.moved = true;
-        this._look(e.movementX, e.movementY);
-      }
+      if (this.mode === 'walk' && this.locked) this._look(e.movementX, e.movementY);
     });
-    dom.addEventListener('pointerdown', (e) => { this._down = { x: e.clientX, y: e.clientY }; if (this.mode === 'walk' && !this.locked) this._drag = { x: e.clientX, y: e.clientY, moved: false }; });
+    // Mirar arrastrando (ratón sin bloquear o dedo): deltas calculados a mano porque en táctil movementX no es fiable
+    addEventListener('pointermove', (e) => {
+      const d = this._drag;
+      if (this.mode !== 'walk' || this.locked || !d || e.pointerId !== d.id) return;
+      const dx = e.clientX - d.lx, dy = e.clientY - d.ly; d.lx = e.clientX; d.ly = e.clientY;
+      if (Math.abs(e.clientX - d.x) + Math.abs(e.clientY - d.y) > 6) d.moved = true;
+      const k = e.pointerType === 'touch' ? 1.9 : 1;
+      this._look(dx * k, dy * k);
+    });
+    dom.addEventListener('pointerdown', (e) => {
+      this._down = { x: e.clientX, y: e.clientY };
+      if (this.mode === 'walk' && !this.locked) this._drag = { id: e.pointerId, x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, moved: false };
+    });
+    addEventListener('pointercancel', (e) => { if (this._drag && this._drag.id === e.pointerId) this._drag = null; });
     addEventListener('pointerup', (e) => {
-      const was = this._drag; this._drag = null;
+      const was = this._drag;
+      if (was && was.id !== e.pointerId) return;
+      this._drag = null;
       if (e.target !== dom) return;
-      const click = this._down && Math.hypot(e.clientX - this._down.x, e.clientY - this._down.y) < 5;
+      const click = this._down && Math.hypot(e.clientX - this._down.x, e.clientY - this._down.y) < (e.pointerType === 'touch' ? 10 : 5);
       if (!click) return;
       if (this.measureOn) { this._measureClick(e); return; }
       if (this.mode === 'walk') {
-        if (!this.locked) { dom.requestPointerLock?.(); if (!was?.moved) this.interact(e); } else this.interact();
+        if (!this.locked) { if (e.pointerType === 'mouse') dom.requestPointerLock?.(); if (!was?.moved) this.interact(e); } else this.interact();
       } else this.interact(e);
     });
     addEventListener('resize', () => this.resize());
     dom.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+  _bindJoystick() {
+    const base = document.getElementById('joy'), knob = document.getElementById('joy-knob');
+    if (!base) return;
+    let id = null, cx = 0, cy = 0;
+    const R = 46;
+    const move = (e) => {
+      let dx = e.clientX - cx, dy = e.clientY - cy; const l = Math.hypot(dx, dy);
+      if (l > R) { dx = dx / l * R; dy = dy / l * R; }
+      knob.style.transform = `translate(${dx}px, ${dy}px)`;
+      this.joy.x = dx / R; this.joy.y = dy / R;
+    };
+    base.addEventListener('pointerdown', (e) => {
+      e.preventDefault(); e.stopPropagation(); id = e.pointerId; base.setPointerCapture(id);
+      const r = base.getBoundingClientRect(); cx = r.left + r.width / 2; cy = r.top + r.height / 2; move(e);
+    });
+    base.addEventListener('pointermove', (e) => { if (e.pointerId === id) move(e); });
+    const end = (e) => { if (e.pointerId !== id) return; id = null; this.joy.x = this.joy.y = 0; knob.style.transform = ''; };
+    base.addEventListener('pointerup', end); base.addEventListener('pointercancel', end);
   }
   _look(dx, dy) {
     this.yaw -= dx * 0.0022; this.pitch -= dy * 0.0022;
@@ -118,6 +149,7 @@ export class Navigation {
     this.camera = m === 'top' ? this.ortho : this.persp;
     if (m === 'orbit') { this.persp.position.copy(this.saved.pos); this.orbit.target.copy(this.saved.target); this.orbit.update(); }
     if (m === 'walk') this._enterWalk();
+    const joy = document.getElementById('joy'); if (joy) joy.hidden = !(m === 'walk' && document.body.classList.contains('touch'));
     this.app.ui?.onMode(m);
   }
   _enterWalk() {
@@ -235,9 +267,11 @@ export class Navigation {
     if (this.mode === 'walk') {
       const k = this.keys;
       const rot = ((k.ArrowLeft ? 1 : 0) - (k.ArrowRight ? 1 : 0)) * 1.8 * dt; this.yaw += rot;
-      const f = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0), s = (k.KeyD ? 1 : 0) - (k.KeyA ? 1 : 0);
+      let f = (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0), s = (k.KeyD ? 1 : 0) - (k.KeyA ? 1 : 0);
+      const jm = Math.hypot(this.joy.x, this.joy.y);
+      if (jm > 0.12) { f -= this.joy.y; s += this.joy.x; }
       if (f || s) {
-        const sp = (k.ShiftLeft || k.ShiftRight ? 3.2 : 1.5) * dt;
+        const sp = (k.ShiftLeft || k.ShiftRight ? 3.2 : 1.5) * (jm > 0.12 ? Math.min(1, jm) * 1.6 : 1) * dt;
         let dx = -Math.sin(this.yaw) * f + Math.cos(this.yaw) * s, dz = -Math.cos(this.yaw) * f - Math.sin(this.yaw) * s;
         const l = Math.hypot(dx, dz); dx = dx / l * sp; dz = dz / l * sp;
         // subpasos para no atravesar paredes finas

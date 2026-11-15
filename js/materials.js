@@ -179,7 +179,7 @@ export function makeMaterials() {
   const std = (o) => new THREE.MeshStandardMaterial(o);
 
   M.wall = std({ color: 0xf2f0ec, roughness: 0.96 });
-  M.ceiling = std({ color: 0xfbfaf8, roughness: 0.98 });
+  M.ceiling = std({ color: 0xffffff, roughness: 0.98 });
   M.ceilingConcrete = std({ color: 0xe9e7e2, roughness: 0.98 });
   M.slabEdge = std({ color: 0xf1efe9, roughness: 0.9 });
   M.ext = std({ color: 0xebe5d8, roughness: 0.92 });       // enfoscado pintado crema (render)
@@ -238,6 +238,7 @@ export function makeMaterials() {
   M.building = std({ color: 0xd8c6a8, roughness: 0.9 });
 
   // ---- Villas del Sur ----
+  M.accent = std({ color: 0xa9b8a0, roughness: 0.96 });   // pared de acento (paleta de colores)
   M.wallTop = std({ color: 0x6f6e6a, roughness: 0.95 });   // canto superior del muro (se ve en la vista de planta)
   M.floorPorcelain = std({ map: porcelainTex([214, 208, 198], 91), roughness: 0.35 });
   M.floorTarima = M.wood;
