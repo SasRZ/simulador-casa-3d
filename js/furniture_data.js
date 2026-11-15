@@ -115,8 +115,8 @@ const plant = (id, room, x, z, k = 'zz', min = 2, h = 0.8) => P({ id, room, name
 
 export const FURNITURE = [
   // ------------------------------------------------------------------ SALÓN · común
-  P({ id: 'tv-mueble', name: 'Mueble TV bajo', room: 'salon', kind: 'tvUnit', x: 2.40, z: 17.30, w: 1.80, d: 0.44, h: 0.50, legs: 0.16, face: 'e' }),
-  P({ id: 'tv', name: 'TV 65" en la pared', room: 'salon', kind: 'tv', x: 2.20, z: 17.30, w: 1.45, d: 0.05, h: 0.84, y: 0.80, face: 'e', wall: true }),
+  P({ id: 'tv-mueble', name: 'Mueble TV bajo 240', room: 'salon', kind: 'tvUnit', x: 2.40, z: 17.30, w: 2.40, d: 0.44, h: 0.50, legs: 0.16, face: 'e' }),
+  P({ id: 'tv', name: 'TV 98" en la pared', room: 'salon', kind: 'tv', x: 2.20, z: 17.30, w: 2.17, d: 0.05, h: 1.22, y: 0.62, face: 'e', wall: true }),
   P({ id: 'mesa-comedor', name: 'Mesa de comedor 190 × 90', room: 'salon', kind: 'diningTable', x: 6.53, z: 17.45, w: 0.90, d: 1.90, h: 0.75, legs: 0.70, face: 's' }),
   ...[16.85, 17.45, 18.05].flatMap((z, i) => [
     P({ id: `silla-o${i}`, name: 'Silla de comedor', room: 'salon', kind: 'chair', x: 5.86, z, w: 0.45, d: 0.46, h: 0.85, legs: 0.43, face: 'e' }),
@@ -218,7 +218,7 @@ export const FURNITURE = [
   // ------------------------------------------------------------------ PIEZAS PROPIAS DE CADA ESTILO
   P({ id: 'huevo', name: 'Sillón huevo colgante de ratán', room: 'salon', kind: 'hangingChair', x: 6.95, z: 15.45, w: 0.80, d: 0.80, h: 2.0, face: 'w', styles: ['boho'] }),
   P({ id: 'farol', name: 'Farol de papel de pie', room: 'salon', kind: 'lantern', x: 6.95, z: 15.30, w: 0.45, d: 0.45, h: 0.75, face: 's', styles: ['japandi'] }),
-  P({ id: 'cesto-salon', name: 'Cesto de fibra con manta', room: 'salon', kind: 'basket', x: 2.42, z: 18.55, w: 0.40, d: 0.40, h: 0.42, face: 'e', styles: ['mediterraneo', 'boho', 'nordico'] }),
+  P({ id: 'cesto-salon', name: 'Cesto de fibra con manta', room: 'salon', kind: 'basket', x: 2.42, z: 19.30, w: 0.40, d: 0.40, h: 0.42, face: 'e', styles: ['mediterraneo', 'boho', 'nordico'] }),
   P({ id: 'biombo-d1', name: 'Biombo de madera y papel', room: 'dorm1', kind: 'screen', x: 4.60, z: 30.15, w: 0.90, d: 0.30, h: 1.70, face: 'n', styles: ['japandi'] }),
   P({ id: 'macrame-d1', name: 'Tapiz de macramé', room: 'dorm1', kind: 'macrame', x: 2.20, z: 28.83, y: 1.30, w: 0.9, d: 0.03, h: 0.8, face: 'e', wall: true, styles: ['boho'] }),
   P({ id: 'galeria-d1', name: 'Pared de cuadros (galería)', room: 'dorm1', kind: 'gallery', x: 2.20, z: 28.83, y: 1.55, w: 1.7, d: 0.03, h: 0.9, face: 'e', wall: true, styles: ['eclectico', 'industrial'] }),
@@ -243,11 +243,20 @@ export const ROOM_NAMES = {
   lavadero: 'Lavadero', porche: 'Porche',
 };
 
+// Tamaños de tele 16:9: ancho, alto, altura del borde inferior y ancho del mueble
+export const TV_SIZES = {
+  65: { w: 1.45, h: 0.84, y: 0.80, unit: 1.80 },
+  75: { w: 1.67, h: 0.96, y: 0.74, unit: 1.80 },
+  85: { w: 1.89, h: 1.08, y: 0.68, unit: 2.00 },
+  98: { w: 2.17, h: 1.22, y: 0.62, unit: 2.40 },
+};
+
 // Avisos: [nivel, texto]  (nivel: ok | warn | bad)
 export const AVISOS = [
   ['warn', '<b>Decoraciones tipo.</b> Cada estilo cambia colores de paredes, maderas, telas, alfombras, plantas y algunas piezas (lámparas colgantes, pufs…). La distribución sale de las medidas del plano y del uso elegido para cada habitación.'],
   ['ok', '<b>Dormitorios 2, 3 y 4:</b> todas las opciones dejan libres el barrido de la puerta y las hojas del armario empotrado, y pasos de al menos 60 cm.'],
   ['warn', '<b>Comedor junto a la cocina:</b> las sillas del lado este quedan casi en el borde de la cocina. Si os resulta estrecho, se gira la mesa o se pone una redonda.'],
   ['warn', '<b>Dormitorio juvenil 3 y 4:</b> la cama de 90 va bajo el lateral de la ventana; la ventana empieza a 45 cm del suelo (estimado), así que el cabecero queda un poco por encima del antepecho.'],
+  ['warn', '<b>Tele de 98":</b> mide 2,17 × 1,22 m y cabe de sobra en la pared del salón (5 m libres). Con el sofá en «TV» los ojos quedan a unos 2,3 m y para 98" se recomiendan 2,5–3,7 m: se ve bien pero algo cerca. Con 85" o menos la distancia es ideal.'],
   ['warn', '<b>Sin datos:</b> enchufes, tomas de TV y cuadro eléctrico no están en el plano. Compruébalo en la obra.'],
 ];

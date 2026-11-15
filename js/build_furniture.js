@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { FURNITURE, STYLES, VARIANTS, STYLE_ALIAS } from './furniture_data.js';
+import { FURNITURE, STYLES, VARIANTS, STYLE_ALIAS, TV_SIZES } from './furniture_data.js';
 import { makeStyled } from './build_styles.js';
 
 // Mobiliario propuesto. Cada pieza se construye en coordenadas locales (frente = +z, centro de la huella en x,z = 0,
@@ -439,6 +439,14 @@ export function buildFurniture(ctx) {
     if (ctx.M && st.wall && ctx.paintWall == null) ctx.M.wall.color.setHex(st.wall);
     buildAll(); refresh(); ctx.furn.setLamps?.(lampState.on, lampState.lvl);
     ctx.invalidate?.();
+  };
+  ctx.furn.setTV = (inch) => {
+    const t = TV_SIZES[inch]; if (!t) return;
+    const tv = FURNITURE.find((i) => i.id === 'tv'), unit = FURNITURE.find((i) => i.id === 'tv-mueble');
+    Object.assign(tv, { w: t.w, h: t.h, y: t.y, name: `TV ${inch}" en la pared` });
+    Object.assign(unit, { w: t.unit, name: `Mueble TV bajo ${Math.round(t.unit * 100)}` });
+    if (colBoxes[unit.id]) Object.assign(colBoxes[unit.id], boxFor(unit));
+    buildAll(); refresh(); ctx.furn.setLamps?.(lampState.on, lampState.lvl);
   };
   ctx.furn.selection = sel;
   ctx.furn.dining = dining;

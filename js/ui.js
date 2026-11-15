@@ -162,6 +162,7 @@ export class UI {
     this._paint();
     const PRESETS = { plano: [0, 0, 0], oeste: [-0.6, 0, 0], corredera: [-0.55, -1.25, 0], girada: [-0.55, -0.6, 1] };
     const setDining = (k) => { const pr = PRESETS[k]; if (pr) this.app.ctx.furn.moveDining(...pr); this.app.nav.invalidateTargets(); };
+    $('opt-tv').onchange = () => { this.app.ctx.furn.setTV(+$('opt-tv').value); this.app.nav.invalidateTargets(); };
     $('opt-dining').onchange = () => setDining($('opt-dining').value);
     $('dining-rot').onclick = () => { const d = this.app.ctx.furn.dining; this.app.ctx.furn.moveDining(undefined, undefined, d.rot + 1); $('opt-dining').value = 'libre'; };
     $('opt-island').onchange = () => {
