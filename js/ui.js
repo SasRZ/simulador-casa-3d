@@ -175,7 +175,13 @@ export class UI {
     $('opt-porch').onchange = () => { this.app.ctx.setPorch($('opt-porch').value); this.app.nav.invalidateTargets(); };
     $('opt-porch-glass').onchange = () => { this.app.ctx.setPorchGlass($('opt-porch-glass').checked); this.app.nav.invalidateTargets(); };
     const carport = () => { $('row-carport-len').hidden = !$('opt-carport').value; this.app.ctx.setCarport($('opt-carport').value, $('opt-carport-len').value); this.app.nav.invalidateTargets(); };
-    $('opt-cars').onchange = () => { this.app.ctx.setCars(+$('opt-cars').value); this.app.nav.invalidateTargets(); };
+    const carsRows = () => { const n = +$('opt-cars').value; ['row-cars-pos', 'row-cars-rot', 'cars-info'].forEach((id) => { $(id).hidden = !n; }); };
+    $('opt-cars').onchange = () => { this.app.ctx.setCars(+$('opt-cars').value); carsRows(); this.app.nav.invalidateTargets(); };
+    $('opt-cars-pos').onchange = () => { this.app.ctx.cars.preset($('opt-cars-pos').value); this.app.nav.invalidateTargets(); };
+    const rotCar = () => { if (this.app.ctx.cars.rotate()) { $('opt-cars-pos').value = 'libre'; this.app.nav.invalidateTargets(); } };
+    $('car-rot').onclick = rotCar;
+    addEventListener('keydown', (e) => { if (e.code === 'KeyR' && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || '')) rotCar(); });
+    this.onCarDragged = () => { $('opt-cars-pos').value = 'libre'; };
     $('opt-carport').onchange = carport; $('opt-carport-len').onchange = carport;
     $('opt-solar').onchange = () => {
       const v = $('opt-solar').value; this.app.ctx.setSolar(v);

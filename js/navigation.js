@@ -134,11 +134,14 @@ export class Navigation {
     return this.raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), p) ? p : null;
   }
   _startDiningDrag(e) {
-    const f = this.app.ctx.furn; if (!f || !f.root.visible) return false;
-    const hits = this._ray(this._ndcFromEvent(e));
-    if (!hits.length || !f.isDining(hits[0].object)) return false;
+    const f = this.app.ctx.furn, cars = this.app.ctx.cars;
+    const hits = this._ray(this._ndcFromEvent(e)); if (!hits.length) return false;
+    const car = cars ? cars.index(hits[0].object) : -1;
+    if (car < 0 && !(f && f.root.visible && f.isDining(hits[0].object))) return false;
     const p = this._floorPoint(e); if (!p) return false;
-    this._dd = { id: e.pointerId, start: p, dx: f.dining.dx, dz: f.dining.dz };
+    this._dd = car >= 0 ? { id: e.pointerId, start: p, car, x: cars.state[car].x, z: cars.state[car].z }
+      : { id: e.pointerId, start: p, dx: f.dining.dx, dz: f.dining.dz };
+    if (car >= 0) { cars.last = car; this.app.ui?.onCarPicked?.(car); }
     this.orbit.enabled = false; this.topCtl.enabled = false;
     this.dom.style.cursor = 'grabbing';
     return true;
@@ -146,6 +149,7 @@ export class Navigation {
   _dragDining(e) {
     const p = this._floorPoint(e); if (!p) return;
     const d = this._dd, f = this.app.ctx.furn;
+    if (d.car !== undefined) { this.app.ctx.cars.move(d.car, d.x + (p.x - d.start.x), d.z + (p.z - d.start.z)); this.app.ui?.onCarDragged?.(); return; }
     f.moveDining(d.dx + (p.x - d.start.x), d.dz + (p.z - d.start.z));
     this.app.ui?.onDiningDragged?.();
   }

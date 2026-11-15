@@ -2,6 +2,7 @@
 // de la promotora (morro hacia la casa). Modelo sencillo de unos 4,60 × 1,80 × 1,45 m.
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { PARCEL, POOL, PLANTER } from './plan.js';
 
 const CARS = [
   { x: 14.85, z: 25.10, color: 0xb8bcc2 },   // gris plata (junto a la casa)
@@ -48,12 +49,66 @@ function makeCar(color) {
   return g;
 }
 
+// Posiciones rápidas: [x, z, giro] de cada coche (giro 0 = morro hacia la casa, 1 = 90º)
+export const CAR_PRESETS = {
+  plano: [[14.85, 25.10, 0], [14.85, 31.10, 0]],
+  puerta: [[14.85, 29.00, 0], [14.85, 23.00, 0]],
+  calle: [[14.85, 25.10, 0], [13.30, 37.60, 1]],
+  dos_calle: [[9.80, 37.60, 1], [15.20, 37.60, 1]],
+};
+
 export function buildCars(ctx) {
-  const cars = CARS.map((c) => {
-    const g = makeCar(c.color); g.position.set(c.x, 0, c.z); ctx.G.site.add(g);
-    ctx.dynColliders.push({ box: { x0: c.x - W / 2, z0: c.z - L / 2, x1: c.x + W / 2, z1: c.z + L / 2 }, fn: () => g.visible });
+  const state = CARS.map((c) => ({ x: c.x, z: c.z, rot: 0 }));
+  const cop = POOL.coping, Lmax = Math.max(...POOL.sizes.map((q) => q.L));
+  const fixed = [
+    { x0: POOL.x0 - cop, z0: POOL.z0 - cop, x1: POOL.x0 + Lmax + cop, z1: POOL.z1 + cop },
+    { x0: PLANTER[0], z0: PLANTER[1], x1: PLANTER[2], z1: PLANTER[3] },
+  ];
+  const boxOf = (st, out = {}) => {
+    const hx = (st.rot % 2 ? L : W) / 2, hz = (st.rot % 2 ? W : L) / 2;
+    return Object.assign(out, { x0: st.x - hx, z0: st.z - hz, x1: st.x + hx, z1: st.z + hz });
+  };
+  const cols = [];
+  const cars = CARS.map((c, i) => {
+    const g = makeCar(c.color); g.position.set(c.x, 0, c.z); g.userData.carIndex = i;
+    g.traverse((o) => { o.userData.carIndex = i; });
+    ctx.G.site.add(g);
+    const col = { box: boxOf(state[i]), fn: () => g.visible, car: i };
+    cols.push(col); ctx.dynColliders.push(col);
     return g;
   });
+  const place = (i) => {
+    const st = state[i], g = cars[i];
+    g.position.set(st.x, 0, st.z); g.rotation.y = -st.rot * Math.PI / 2;
+    boxOf(st, cols[i].box);
+  };
+  const overlap = (a, b) => a.x0 < b.x1 && a.x1 > b.x0 && a.z0 < b.z1 && a.z1 > b.z0;
+  const fits = (i, st) => {
+    const b = boxOf(st);
+    const inside = b.x0 >= PARCEL.x0 && b.x1 <= PARCEL.x1 && b.z0 >= PARCEL.z0 && b.z1 <= PARCEL.z1;
+    const street = b.z0 >= PARCEL.z1 + 0.3 && b.z1 <= PARCEL.z1 + 7 && b.x0 >= PARCEL.x0 - 2 && b.x1 <= PARCEL.x1 + 2;
+    if (!inside && !street) return false;
+    if (fixed.some((f) => overlap(b, f))) return false;
+    if (ctx.colliders.some((c) => overlap(b, c))) return false;
+    if (ctx.dynColliders.some((d) => d.car !== i && d.box && overlap(b, d.box) && (d.op ? d.op.blocking : d.fn ? d.fn() : true))) return false;
+    return true;
+  };
+  ctx.cars = {
+    state, last: 0,
+    index: (o) => { while (o) { if (o.userData?.carIndex !== undefined && cars[o.userData.carIndex].visible) return o.userData.carIndex; o = o.parent; } return -1; },
+    // mueve con deslizamiento: si no cabe, prueba solo en x o solo en z
+    move(i, x, z) {
+      const st = state[i]; this.last = i;
+      for (const c of [{ x, z }, { x, z: st.z }, { x: st.x, z }]) if (fits(i, { ...st, ...c })) { Object.assign(st, c); break; }
+      place(i);
+    },
+    rotate(i = this.last) {
+      const st = state[i], n = { ...st, rot: (st.rot + 1) % 2 };
+      if (!fits(i, n)) return false;
+      Object.assign(st, n); place(i); return true;
+    },
+    preset(k) { const p = CAR_PRESETS[k]; if (!p) return; p.forEach(([x, z, rot], i) => { Object.assign(state[i], { x, z, rot }); place(i); }); },
+  };
   ctx.setCars = (n) => cars.forEach((g, i) => { g.visible = i < n; });
   ctx.setCars(2);
 }
