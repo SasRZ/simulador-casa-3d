@@ -17,27 +17,27 @@ function canvas(w, h) { const c = document.createElement('canvas'); c.width = w;
 const hex = (r, g, b) => `rgb(${r | 0},${g | 0},${b | 0})`;
 
 // ---- Suelo de la vivienda: tarima/laminado marrón clarito (foto EjemploTonos). 1 tile = 1,2 × 1,2 m
-function woodTex() {
-  const S = 1024, c = canvas(S, S), g = c.getContext('2d'), R = rng(7);
-  const rows = 6, rh = S / rows;
+function woodTex(base = [218, 190, 150], seed = 7, rows = 6) {
+  const S = 1024, c = canvas(S, S), g = c.getContext('2d'), R = rng(seed);
+  const rh = S / rows;
   for (let r = 0; r < rows; r++) {
     let x = -R() * S * 0.8;
     while (x < S) {
       const len = S * (0.6 + R() * 0.4);
       const v = 0.94 + R() * 0.10;
-      g.fillStyle = hex(218 * v, 190 * v, 150 * v);
+      g.fillStyle = hex(base[0] * v, base[1] * v, base[2] * v);
       g.fillRect(x, r * rh, len, rh);
       // veta
       for (let k = 0; k < 26; k++) {
-        g.strokeStyle = `rgba(${150 + R() * 40},${115 + R() * 30},${80 + R() * 20},${0.05 + R() * 0.07})`;
+        g.strokeStyle = `rgba(${base[0] * 0.69 + R() * 40},${base[1] * 0.6 + R() * 30},${base[2] * 0.53 + R() * 20},${0.05 + R() * 0.07})`;
         g.lineWidth = 0.6 + R() * 1.4;
         const yy = r * rh + R() * rh;
         g.beginPath(); g.moveTo(x, yy); g.bezierCurveTo(x + len * 0.3, yy + (R() - 0.5) * 6, x + len * 0.6, yy + (R() - 0.5) * 6, x + len, yy + (R() - 0.5) * 3); g.stroke();
       }
-      g.fillStyle = 'rgba(95,70,45,0.55)'; g.fillRect(x, r * rh, 1.5, rh);      // junta testa
+      g.fillStyle = `rgba(${base[0] * 0.44 | 0},${base[1] * 0.37 | 0},${base[2] * 0.3 | 0},0.55)`; g.fillRect(x, r * rh, 1.5, rh);      // junta testa
       x += len;
     }
-    g.fillStyle = 'rgba(95,70,45,0.45)'; g.fillRect(0, r * rh, S, 1.5);          // junta larga
+    g.fillStyle = `rgba(${base[0] * 0.44 | 0},${base[1] * 0.37 | 0},${base[2] * 0.3 | 0},0.45)`; g.fillRect(0, r * rh, S, 1.5);          // junta larga
   }
   // repetir los tramos que cruzan el borde
   const t = tex(c); return t;
@@ -172,6 +172,41 @@ function woodlookTex() {
     g.fillStyle = 'rgba(60,45,30,0.6)'; g.fillRect(0, r * rh, S, 3);
   }
   return tex(c);
+}
+
+// ---- Catálogo de suelos para probar (la memoria permite porcelánico Porcelanosa o tarima AC6;
+//      el tono exacto se elige en el catálogo de la promotora: esto son aproximaciones)
+export const FLOOR_OPTIONS = [
+  { group: 'Tarima AC6 (cocina y baños en porcelánico)', items: [
+    { id: 't-natural', name: 'Roble natural', kind: 'wood', base: [218, 190, 150] },
+    { id: 't-nordico', name: 'Roble claro nórdico', kind: 'wood', base: [234, 216, 186] },
+    { id: 't-arena', name: 'Roble arena', kind: 'wood', base: [226, 204, 168] },
+    { id: 't-miel', name: 'Roble miel', kind: 'wood', base: [208, 168, 118] },
+    { id: 't-haya', name: 'Haya', kind: 'wood', base: [222, 184, 142] },
+    { id: 't-nogal', name: 'Nogal claro', kind: 'wood', base: [172, 132, 96] },
+    { id: 't-gris', name: 'Roble grisáceo (recomendado japandi / minimalista)', kind: 'wood', base: [192, 182, 166] },
+    { id: 't-blanqueado', name: 'Roble blanqueado (recomendado nórdico / mediterráneo)', kind: 'wood', base: [236, 228, 214] },
+  ] },
+  { group: 'Porcelánico en toda la casa', items: [
+    { id: 'p-plano', name: 'Beige claro (por defecto)', kind: 'tile', base: [214, 208, 198] },
+    { id: 'p-marfil', name: 'Marfil (muy luminoso)', kind: 'tile', base: [230, 224, 210] },
+    { id: 'p-piedra', name: 'Beige piedra', kind: 'tile', base: [210, 198, 178] },
+    { id: 'p-perla', name: 'Gris perla', kind: 'tile', base: [206, 206, 202] },
+    { id: 'p-cemento', name: 'Gris cemento (recomendado industrial)', kind: 'tile', base: [168, 168, 164] },
+    { id: 'p-madera', name: 'Imitación madera clara (resiste el agua)', kind: 'woodTile', base: [214, 182, 140] },
+    { id: 'p-madera-miel', name: 'Imitación madera miel', kind: 'woodTile', base: [196, 156, 110] },
+  ] },
+];
+const _floorCache = {};
+export function floorMaterial(id) {
+  if (_floorCache[id]) return _floorCache[id];
+  const it = FLOOR_OPTIONS.flatMap((g) => g.items).find((q) => q.id === id);
+  if (!it) return null;
+  const seed = 200 + Object.keys(_floorCache).length * 13;
+  const map = it.kind === 'tile' ? porcelainTex(it.base, seed) : woodTex(it.base, seed, it.kind === 'woodTile' ? 5 : 6);
+  const m = new THREE.MeshStandardMaterial({ map, roughness: it.kind === 'wood' ? 0.55 : it.kind === 'woodTile' ? 0.4 : 0.35 });
+  m.userData.kind = it.kind;
+  return (_floorCache[id] = m);
 }
 
 export function makeMaterials() {

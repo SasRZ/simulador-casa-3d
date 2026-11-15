@@ -4,6 +4,7 @@ import {
   WALLS, WINDOWS, SLIDER, DOORS, WARDROBES, FLOORS, TILED, INTERIOR, CLADDING, CEILINGS, LOW_CEILINGS, FASCIAS,
   SPOTS, LOW_SPOT_ROOMS, GRILLES, ROOFS, ACCENTS,
 } from './plan.js';
+import { floorMaterial } from './materials.js';
 import { box, rectXZ, wallPieces, prism, angleOf, shortAngleDelta } from './helpers.js';
 
 const H = CFG.H;
@@ -98,9 +99,12 @@ export function buildDwelling(ctx) {
     if (ctx.floors[kind]) ctx.floors[kind].push(m);
   });
   ctx.setFloor = (k) => {
-    const tar = k === 'tarima';
-    ctx.floors.main.forEach((m) => { m.material = tar ? M.floorTarima : M.floorPorcelain; });
-    ctx.floors.kitchen.forEach((m) => { m.material = M.floorPorcelain; });   // la cocina siempre porcelánico
+    // k: id del catálogo FLOOR_OPTIONS (o los antiguos 'porcelanico' / 'tarima')
+    const id = k === 'tarima' ? 't-natural' : k === 'porcelanico' ? 'p-plano' : k;
+    const mat = floorMaterial(id) || M.floorPorcelain;
+    const isTile = mat.userData.kind !== 'wood';
+    ctx.floors.main.forEach((m) => { m.material = mat; });
+    ctx.floors.kitchen.forEach((m) => { m.material = isTile ? mat : M.floorPorcelain; });   // con tarima, la cocina va en porcelánico
   };
   // Solera bajo la casa (canto visible desde fuera)
   ROOFS.forEach((r) => G.structure.add(prism(r.pts, -0.15, -0.005, [M.extWhite, M.extWhite])));

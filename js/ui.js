@@ -3,6 +3,7 @@ import { CFG, ESTIMATES } from './config.js';
 import { ROOMS, ROOM_LIGHT_GROUPS } from './plan.js';
 import { FURNITURE, VARIANTS, VARIANT_LABELS, STYLES, AVISOS, ROOM_NAMES } from './furniture_data.js';
 const GHOST = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: THREE.DoubleSide });
+import { FLOOR_OPTIONS } from './materials.js';
 import { sunPosition, localToUtc, sunTimes, fmtMin, bearingName } from './sun.js';
 
 const $ = (id) => document.getElementById(id);
@@ -154,6 +155,8 @@ export class UI {
       $('clip-out').textContent = v >= 3.6 ? 'off' : `${f1(v)} m`;
     };
     $('eye').oninput = () => { const v = +$('eye').value; this.app.nav.setEye(v); $('eye-out').textContent = `${v.toFixed(2).replace('.', ',')} m`; };
+    $('opt-floor').innerHTML = FLOOR_OPTIONS.map((g) => `<optgroup label="${g.group}">${g.items.map((i) => `<option value="${i.id}">${i.name}</option>`).join('')}</optgroup>`).join('');
+    $('opt-floor').value = 'p-plano';
     $('opt-floor').onchange = () => this.app.ctx.setFloor($('opt-floor').value);
     $('opt-hall-door').onchange = () => { this.app.ctx.setHallSlider($('opt-hall-door').value); this.app.nav.invalidateTargets(); };
     this._paint();
