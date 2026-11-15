@@ -385,12 +385,33 @@ export function buildFurniture(ctx) {
   // Formas según estilo: los constructores de build_styles.js sustituyen a los genéricos
   Object.assign(B, makeStyled({ bx, cy, sp, legs4, light, books }));
   const visibleIds = new Set();
+  // Grupo del comedor (mesa + sillas + colgantes): se puede mover y girar como un bloque
+  const DINING = /^(mesa-comedor|silla-[oe]\d|colgante\d)$/;
+  const PIV = { x: 6.53, z: 17.45 };
+  const dining = { dx: 0, dz: 0, rot: 0 };
+  const diningPos = (it) => {
+    const ox = it.x - PIV.x, oz = it.z - PIV.z;
+    const [rx, rz] = dining.rot % 2 ? [oz, -ox] : [ox, oz];
+    const sgn = dining.rot >= 2 ? -1 : 1;
+    return { x: PIV.x + dining.dx + rx * sgn, z: PIV.z + dining.dz + rz * sgn, ry: ROT[it.face] + dining.rot * Math.PI / 2 };
+  };
+  const colBoxes = {};
+  const boxFor = (it) => {
+    const p = DINING.test(it.id) ? diningPos(it) : { x: it.x, z: it.z };
+    let ns = it.face === 'n' || it.face === 's';
+    if (DINING.test(it.id) && dining.rot % 2) ns = !ns;
+    const dx = ns ? it.w : it.d, dz = ns ? it.d : it.w;
+    return { x0: p.x - dx / 2, z0: p.z - dz / 2, x1: p.x + dx / 2, z1: p.z + dz / 2 };
+  };
   // colisiones: una por pieza, activas si la pieza se ve
   for (const it of FURNITURE) if (isSolid(it)) {
-    const ns = it.face === 'n' || it.face === 's';
-    const dx = ns ? it.w : it.d, dz = ns ? it.d : it.w;
-    ctx.dynColliders.push({ box: { x0: it.x - dx / 2, z0: it.z - dz / 2, x1: it.x + dx / 2, z1: it.z + dz / 2 }, fn: () => ctx.furn.root.visible && visibleIds.has(it.id) });
+    const b = colBoxes[it.id] = boxFor(it);
+    ctx.dynColliders.push({ box: b, fn: () => ctx.furn.root.visible && visibleIds.has(it.id) });
   }
+  const placeDining = () => {
+    for (const { it, obj } of ctx.furn.items) if (DINING.test(it.id)) { const p = diningPos(it); obj.position.x = p.x; obj.position.z = p.z; obj.rotation.y = p.ry; }
+    for (const it of FURNITURE) if (DINING.test(it.id) && colBoxes[it.id]) Object.assign(colBoxes[it.id], boxFor(it));
+  };
   // (Re)construye todas las piezas con el estilo actual
   const buildAll = () => {
     for (const { obj } of ctx.furn.items) { ctx.furn.root.remove(obj); obj.traverse((o) => { if (o.isMesh) o.geometry.dispose(); }); }
@@ -406,6 +427,7 @@ export function buildFurniture(ctx) {
       ctx.furn.root.add(inner);
       ctx.furn.items.push({ it, obj: inner });
     }
+    placeDining();
   };
   const refresh = () => { visibleIds.clear(); ctx.furn.items.forEach(({ it, obj }) => { obj.visible = shown(it); if (obj.visible) visibleIds.add(it.id); }); };
   ctx.furn.setOption = (room, opt) => { sel[room] = opt; refresh(); };
@@ -419,6 +441,17 @@ export function buildFurniture(ctx) {
     ctx.invalidate?.();
   };
   ctx.furn.selection = sel;
+  ctx.furn.dining = dining;
+  ctx.furn.isDining = (o) => { while (o) { if (o.userData?.item && DINING.test(o.userData.item.id)) return true; o = o.parent; } return false; };
+  ctx.furn.moveDining = (dx, dz, rot) => {
+    if (dx !== undefined) dining.dx = dx; if (dz !== undefined) dining.dz = dz; if (rot !== undefined) dining.rot = ((rot % 4) + 4) % 4;
+    // límites: dentro del salón-comedor (x 2,4..7,4 · z 15,0..20,9)
+    const half = dining.rot % 2 ? { x: 1.05, z: 0.75 } : { x: 0.75, z: 1.05 };
+    dining.dx = Math.max(2.4 + half.x - PIV.x, Math.min(7.45 - half.x - PIV.x, dining.dx));
+    dining.dz = Math.max(15.0 + half.z - PIV.z, Math.min(20.9 - half.z - PIV.z, dining.dz));
+    placeDining();
+  };
+  ctx.furn.diningCenter = () => ({ x: PIV.x + dining.dx, z: PIV.z + dining.dz });
   ctx.furn.setCurtains = (closed) => {
     ctx.furn.curtains.forEach(({ g }) => {
       const m = g.userData.mode, k = closed ? m.closed : m.open;

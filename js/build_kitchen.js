@@ -51,3 +51,26 @@ export function buildKitchen(ctx) {
   splash(7.527, 20.06, 9.90, 20.075);
   upper(7.527, 20.075 - K.upperDepth, 9.90, 20.075);
 }
+
+// Isla opcional (propuesta): 0,90 × 1,80 m en el centro de la cocina, con 3 taburetes hacia el salón.
+// Deja 0,83 m de paso hasta la placa (frente este) y 1,6 m al norte y al sur.
+export function buildIsland(ctx) {
+  const { M, G } = ctx;
+  const K = CFG.kitchen, top = K.baseH + K.counterT;
+  const g = new THREE.Group(); g.name = 'isla'; g.visible = false; G.structure.add(g); G.island = g;
+  const x0 = 8.40, x1 = 9.30, z0 = 16.50, z1 = 18.30;
+  g.add(box(x0 + 0.05, 0.10, z0 + 0.05, x1, K.baseH, z1 - 0.05, M.cabinet));      // cuerpo (frente hacia la cocina)
+  g.add(box(x0 + 0.08, 0, z0 + 0.08, x1 - 0.06, 0.10, z1 - 0.08, M.cabinetDark)); // zócalo
+  g.add(box(x0 - 0.25, K.baseH, z0, x1, top, z1, M.worktop));                     // encimera con vuelo de 25 cm para la barra
+  // taburetes
+  const seat = new THREE.MeshStandardMaterial({ color: 0x8a6a4a, roughness: 0.6 });
+  [16.90, 17.40, 17.90].forEach((z) => {
+    const st = new THREE.Group(); st.position.set(8.02, 0, z); g.add(st);
+    const s1 = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.17, 0.05, 20), seat); s1.position.y = 0.66; st.add(s1);
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b]) => { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.015, 0.64, 8), M.window); l.position.set(a * 0.12, 0.32, b * 0.12); l.rotation.z = -a * 0.08; l.rotation.x = b * 0.08; st.add(l); });
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.008, 6, 20), M.window); ring.rotation.x = Math.PI / 2; ring.position.y = 0.25; st.add(ring);
+    st.traverse((o) => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
+  });
+  ctx.dynColliders.push({ box: { x0: 7.82, z0, x1, z1 }, fn: () => g.visible });
+  ctx.setIsland = (on) => { g.visible = on; };
+}

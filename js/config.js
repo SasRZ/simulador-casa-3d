@@ -92,6 +92,7 @@ export const ESTIMATES = [
   ['Corredera vestíbulo–distribuidor (opcional)', 'propuesta: hoja de 1,08 × 2,10 m de DM lacado blanco (o con vidriera) en la boca del distribuidor (hueco de 1,00 m alineado con el muro del dormitorio 4); corre por el lado del vestíbulo delante del muro del dormitorio 4; dintel hasta el falso techo. No viene en el plano'],
   ['Colores de paredes y techo', 'la memoria dice pintura plástica lisa blanca; los demás colores son opciones para probar'],
   ['Pérgola del aparcamiento (opcional)', 'propuesta: estructura de aluminio antracita con postes de 12 × 12 cm a ambos lados cada ≈ 3 m, altura libre 2,45 m (lado casa) a 2,30 m (lado medianera), toldo de lona o lamas fijas; termina a 0,40 m de la corredera de vehículos. No viene en la memoria y en Dos Hermanas puede necesitar licencia de obra menor: consúltalo con el ayuntamiento y la promotora'],
+  ['Isla de cocina (opcional)', 'propuesta: 0,90 × 1,80 m con encimera blanca y vuelo de 25 cm para 3 taburetes hacia el salón; deja 0,83 m de paso hasta la placa. Al activarla, la mesa del comedor se desplaza 60 cm hacia el salón'],
   ['Piscina', '6,00 × 3,00 m (plano y memoria) · opción de 7,5 × 3 m para comparar (se alarga hacia las tumbonas, misma posición del lado de la casa) · profundidad 1,40 m · coronación a elegir'],
   ['Cerramiento de parcela', 'frente: murete de 0,90 m + reja metálica hasta 2,00 m · medianeras de ladrillo 2,00 m con pilastras'],
   ['Puertas de la parcela', 'peatonal 0,92 m y corredera de vehículos de 4,0 m (posición del plano, modelo estimado)'],

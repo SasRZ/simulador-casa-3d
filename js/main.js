@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { CFG } from './config.js';
 import { makeMaterials, setAnisotropy } from './materials.js';
 import { buildDwelling, buildHallSlider } from './build_dwelling.js';
-import { buildKitchen } from './build_kitchen.js';
+import { buildKitchen, buildIsland } from './build_kitchen.js';
 import { buildBaths } from './build_baths.js';
 import { buildSite } from './build_site.js';
 import { buildSolar } from './build_solar.js';
@@ -38,7 +38,7 @@ async function boot() {
   msg('muros, suelos y carpinterías'); await nextFrame();
   buildDwelling(ctx); buildHallSlider(ctx); buildSolar(ctx);
   msg('cocina y baños'); await nextFrame();
-  buildKitchen(ctx); buildBaths(ctx);
+  buildKitchen(ctx); buildIsland(ctx); buildBaths(ctx);
   msg('parcela, porche y piscina'); await nextFrame();
   buildSite(ctx); buildCarport(ctx);
 

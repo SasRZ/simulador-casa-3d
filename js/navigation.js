@@ -87,10 +87,13 @@ export class Navigation {
     });
     dom.addEventListener('pointerdown', (e) => {
       this._down = { x: e.clientX, y: e.clientY };
+      if (this.mode !== 'walk' && !this.measureOn && e.button === 0 && this._startDiningDrag(e)) return;
       if (this.mode === 'walk' && !this.locked) this._drag = { id: e.pointerId, x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, moved: false };
     });
     addEventListener('pointercancel', (e) => { if (this._drag && this._drag.id === e.pointerId) this._drag = null; });
+    addEventListener('pointermove', (e) => { if (this._dd && e.pointerId === this._dd.id) this._dragDining(e); });
     addEventListener('pointerup', (e) => {
+      if (this._dd && e.pointerId === this._dd.id) { this._endDiningDrag(); this._down = null; return; }
       const was = this._drag;
       if (was && was.id !== e.pointerId) return;
       this._drag = null;
@@ -123,6 +126,33 @@ export class Navigation {
     base.addEventListener('pointermove', (e) => { if (e.pointerId === id) move(e); });
     const end = (e) => { if (e.pointerId !== id) return; id = null; this.joy.x = this.joy.y = 0; knob.style.transform = ''; };
     base.addEventListener('pointerup', end); base.addEventListener('pointercancel', end);
+  }
+  // ---------- arrastrar la mesa del comedor (vistas Órbita y Planta) ----------
+  _floorPoint(e) {
+    this.raycaster.setFromCamera(this._ndcFromEvent(e), this.camera);
+    const p = new THREE.Vector3();
+    return this.raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), p) ? p : null;
+  }
+  _startDiningDrag(e) {
+    const f = this.app.ctx.furn; if (!f || !f.root.visible) return false;
+    const hits = this._ray(this._ndcFromEvent(e));
+    if (!hits.length || !f.isDining(hits[0].object)) return false;
+    const p = this._floorPoint(e); if (!p) return false;
+    this._dd = { id: e.pointerId, start: p, dx: f.dining.dx, dz: f.dining.dz };
+    this.orbit.enabled = false; this.topCtl.enabled = false;
+    this.dom.style.cursor = 'grabbing';
+    return true;
+  }
+  _dragDining(e) {
+    const p = this._floorPoint(e); if (!p) return;
+    const d = this._dd, f = this.app.ctx.furn;
+    f.moveDining(d.dx + (p.x - d.start.x), d.dz + (p.z - d.start.z));
+    this.app.ui?.onDiningDragged?.();
+  }
+  _endDiningDrag() {
+    this._dd = null; this.dom.style.cursor = '';
+    this.orbit.enabled = this.mode === 'orbit'; this.topCtl.enabled = this.mode === 'top';
+    this.invalidateTargets();
   }
   _look(dx, dy) {
     this.yaw -= dx * 0.0022; this.pitch -= dy * 0.0022;

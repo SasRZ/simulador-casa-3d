@@ -160,6 +160,16 @@ export class UI {
     $('opt-floor').onchange = () => this.app.ctx.setFloor($('opt-floor').value);
     $('opt-hall-door').onchange = () => { this.app.ctx.setHallSlider($('opt-hall-door').value); this.app.nav.invalidateTargets(); };
     this._paint();
+    const PRESETS = { plano: [0, 0, 0], oeste: [-0.6, 0, 0], corredera: [-0.55, -1.25, 0], girada: [-0.55, -0.6, 1] };
+    const setDining = (k) => { const pr = PRESETS[k]; if (pr) this.app.ctx.furn.moveDining(...pr); this.app.nav.invalidateTargets(); };
+    $('opt-dining').onchange = () => setDining($('opt-dining').value);
+    $('dining-rot').onclick = () => { const d = this.app.ctx.furn.dining; this.app.ctx.furn.moveDining(undefined, undefined, d.rot + 1); $('opt-dining').value = 'libre'; };
+    $('opt-island').onchange = () => {
+      const on = $('opt-island').checked; this.app.ctx.setIsland(on);
+      if (on && $('opt-dining').value === 'plano') { $('opt-dining').value = 'oeste'; setDining('oeste'); }
+      this.app.nav.invalidateTargets();
+    };
+    this.onDiningDragged = () => { $('opt-dining').value = 'libre'; };
     $('opt-kitchen').onchange = () => { G.kitchen.visible = $('opt-kitchen').checked; this.app.nav.invalidateTargets(); };
     $('opt-porch').onchange = () => { this.app.ctx.setPorch($('opt-porch').value); this.app.nav.invalidateTargets(); };
     $('opt-porch-glass').onchange = () => { this.app.ctx.setPorchGlass($('opt-porch-glass').checked); this.app.nav.invalidateTargets(); };
