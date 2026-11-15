@@ -89,6 +89,8 @@ export const ESTIMATES = [
   ['Porche', 'pilares de 0,25 m (plano) · cubierta de lamas blancas a 2,70 m (o losa: elige en el panel) · el plano no dice cuál'],
   ['Cristalera del porche (opcional)', 'propuesta: hojas correderas de vidrio con perfil antracita en el frente (entre pilares) y en los dos laterales, de suelo a viga (2,66 m). Modelo y nº de hojas estimados'],
   ['Placas solares (opcional)', 'propuesta: paneles de 1,72 × 1,13 m (≈ 450 W) sobre estructura inclinada 30º, mirando al sur, en filas sobre la cubierta. No vienen en la memoria de calidades'],
+  ['Corredera vestíbulo–distribuidor (opcional)', 'propuesta: hoja de 1,18 × 2,10 m de DM lacado blanco (o con vidriera) que corre por la cara del salón delante del muro del baño 2; dintel hasta el techo y tabique de remate de 0,60 m junto al vestíbulo para cerrar el paso. No viene en el plano'],
+  ['Colores de paredes y techo', 'la memoria dice pintura plástica lisa blanca; los demás colores son opciones para probar'],
   ['Piscina', '6,00 × 3,00 m (plano y memoria) · opción de 7,5 × 3 m para comparar (se alarga hacia las tumbonas, misma posición del lado de la casa) · profundidad 1,40 m · coronación a elegir'],
   ['Cerramiento de parcela', 'frente: murete de 0,90 m + reja metálica hasta 2,00 m · medianeras de ladrillo 2,00 m con pilastras'],
   ['Puertas de la parcela', 'peatonal 0,92 m y corredera de vehículos de 4,0 m (posición del plano, modelo estimado)'],

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { CFG } from './config.js';
 import { makeMaterials, setAnisotropy } from './materials.js';
-import { buildDwelling } from './build_dwelling.js';
+import { buildDwelling, buildHallSlider } from './build_dwelling.js';
 import { buildKitchen } from './build_kitchen.js';
 import { buildBaths } from './build_baths.js';
 import { buildSite } from './build_site.js';
@@ -34,7 +34,7 @@ async function boot() {
   ['structure', 'upper', 'kitchen', 'baths', 'site', 'exterior'].forEach((k) => { G[k] = new THREE.Group(); G[k].name = k; scene.add(G[k]); });
 
   msg('muros, suelos y carpinterías'); await nextFrame();
-  buildDwelling(ctx); buildSolar(ctx);
+  buildDwelling(ctx); buildHallSlider(ctx); buildSolar(ctx);
   msg('cocina y baños'); await nextFrame();
   buildKitchen(ctx); buildBaths(ctx);
   msg('parcela, porche y piscina'); await nextFrame();

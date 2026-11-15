@@ -55,11 +55,39 @@ export const STYLES = {
     colors: { oak: 0xd2ab80, ash: 0xe0c9a5, sofa: 0x2f5d50, sofaSoft: 0x3d6f61, sofaLeg: 0xb08d57, metal: 0xb08d57, rug: 0x8a3f4f, rugEdge: 0xd9b04c, sage: 0xd9768a, mustard: 0xe0b23a, petrol: 0x2d4f7a, linen: 0xe8dcc8, sand: 0xc9a77e, cream: 0xf0e6d6, rattan: 0xc9a56d, ceramicSand: 0x2d4f7a, frame: 0xb08d57 },
   },
   vintage: {
-    name: 'Vintage / retro', plants: 1, wall: 0xf2ead8,
-    note: 'Madera de teca, formas de los 50-70 y colores vivos: naranja, mostaza y verde azulado.',
-    colors: { oak: 0xb88050, ash: 0xc8925c, sofa: 0xc8762e, sofaSoft: 0xd88a40, sofaLeg: 0x5a3a22, metal: 0xc9a24a, rug: 0xd8b04c, rugEdge: 0x8a5a2a, sage: 0x6f8a4a, mustard: 0xd8b04c, petrol: 0x2e7d7a, linen: 0xeadcc0, sand: 0xc8a878, cream: 0xf0e2c6, rattan: 0xc9a56d, ceramicSand: 0x2e7d7a, frame: 0x5a3a22 },
+    name: 'Vintage', plants: 2, wall: 0xf3ece4,
+    note: 'Muebles antiguos restaurados y materiales reutilizados (mesa de palés), en tonos pastel: rosa, azul y verde.',
+    colors: { oak: 0xdcc8aa, ash: 0xe6d6bb, sofa: 0xd9a3a8, sofaSoft: 0xe3b5b9, sofaLeg: 0x8a6a4a, metal: 0xc9b48a, rug: 0xe6d8cc, rugEdge: 0xc9a6a8, sage: 0xa8c3a0, mustard: 0xe8d29a, petrol: 0x9db8cf, linen: 0xf0e6dc, sand: 0xd9c4a8, cream: 0xf6eee4, rattan: 0xd4b88a, ceramicSand: 0x9db8cf, frame: 0xc9b48a },
+  },
+  retro: {
+    name: 'Retro (años 50-70)', plants: 1, wall: 0xf2ead8,
+    note: 'Formas redondeadas, teca, patas inclinadas, plástico y vinilo; colores vivos: naranja, verde y amarillo.',
+    colors: { oak: 0xb88050, ash: 0xc8925c, sofa: 0xc8762e, sofaSoft: 0xd88a40, sofaLeg: 0x5a3a22, metal: 0xc9a24a, rug: 0xd8b04c, rugEdge: 0x8a5a2a, sage: 0x6f8a4a, mustard: 0xe0c03a, petrol: 0x2e7d7a, linen: 0xeadcc0, sand: 0xc8a878, cream: 0xf0e2c6, rattan: 0xc9a56d, ceramicSand: 0x2e7d7a, frame: 0x5a3a22 },
+  },
+  artdeco: {
+    name: 'Art déco', plants: 1, wall: 0xe9e4da,
+    note: 'Años 20-30: geometría, mármol, vidrio, dorado, negro y rojo, terciopelo y espejos.',
+    colors: { oak: 0x6a4a36, ash: 0x7a5a42, sofa: 0x1f4d45, sofaSoft: 0x2b5f55, sofaLeg: 0xc9a24a, metal: 0xc9a24a, rug: 0x1e1e1e, rugEdge: 0xc9a24a, sage: 0x1f4d45, mustard: 0xc9a24a, petrol: 0x7a1f2b, linen: 0xe8e0d0, sand: 0x9a8a70, cream: 0xf0e8d8, rattan: 0xc9a24a, ceramicSand: 0x1e1e1e, frame: 0xc9a24a },
+  },
+  nautico: {
+    name: 'Náutico', plants: 1, wall: 0xffffff,
+    note: 'Costa: blanco, azul marino y arena, madera pintada, ratán y cuerdas.',
+    colors: { oak: 0xf5efe6, ash: 0xfbf8f2, sofa: 0xeeede8, sofaSoft: 0xf6f5f0, sofaLeg: 0x8a6a4a, metal: 0xb9b2a3, rug: 0xe8e2d2, rugEdge: 0x1f3a5f, sage: 0x9fc5d6, mustard: 0xc0392b, petrol: 0x1f3a5f, linen: 0xf3efe6, sand: 0xd8c7a3, cream: 0xf7f3ea, rattan: 0xcfae78, ceramicSand: 0x1f3a5f, frame: 0x1f3a5f },
+  },
+  zen: {
+    name: 'Zen', plants: 2, wall: 0xf3efe7,
+    note: 'Armonía y sencillez: madera natural, líneas rectas, pocos objetos y tonos neutros claros.',
+    colors: { oak: 0xeadbc4, ash: 0xf2e6d2, sofa: 0xd9d2c3, sofaSoft: 0xe4ddcf, sofaLeg: 0xb89a74, metal: 0x8a8070, rug: 0xe2d6bd, rugEdge: 0xcfc0a2, sage: 0x9aa58a, mustard: 0xc9b896, petrol: 0x8e9488, linen: 0xeee7da, sand: 0xcdbf9f, cream: 0xf3ede2, rattan: 0xc7b08a, ceramicSand: 0xb9ab92, frame: 0xb89a74 },
+  },
+  kitsch: {
+    name: 'Kitsch', plants: 1, wall: 0xf7d7e3,
+    note: 'Color sin complejos: rosa chicle, azul cielo, rojo y verde manzana, formas llamativas.',
+    colors: { oak: 0xffffff, ash: 0xffffff, sofa: 0xff5fa2, sofaSoft: 0xff86ba, sofaLeg: 0xffe04f, metal: 0xffe04f, rug: 0x4fc3f7, rugEdge: 0xffe04f, sage: 0x7ed957, mustard: 0xff3b30, petrol: 0x4fc3f7, linen: 0xfff1f6, sand: 0xffb3d1, cream: 0xfff6fa, rattan: 0xffe04f, ceramicSand: 0x7ed957, frame: 0xffe04f },
   },
 };
+
+// Estilos que usan las formas de otro (cambian colores y detalles)
+export const STYLE_ALIAS = { retro: 'vintage', artdeco: 'eclectico', nautico: 'mediterraneo', zen: 'japandi', kitsch: 'eclectico' };
 
 // ---------------------------------------------------------------- usos por estancia
 const BED_USES = { dos: 'Dos camas de 90 (como el plano)', doble: 'Dormitorio doble (cama 150)', juvenil: 'Juvenil (cama 90 y escritorio)', despacho: 'Despacho / estudio' };
@@ -96,7 +124,7 @@ export const FURNITURE = [
   ]),
   plant('planta-salon', 'salon', 2.55, 15.10, 'ficus', 1, 1.6),
   plant('planta-salon2', 'salon', 4.90, 20.75, 'monstera', 2, 1.1),
-  plant('planta-salon3', 'salon', 6.95, 15.15, 'palm', 3, 1.7),
+  plant('planta-salon3', 'salon', 4.10, 20.75, 'palm', 3, 1.7),
   rug('alfombra-salon', 'salon', 'base', 3.95, 17.43, 3.0, 2.0, 'e'),
   P({ id: 'lampara-salon', name: 'Lámpara de pie (luz cálida)', room: 'salon', kind: 'floorLamp', x: 2.50, z: 15.75, w: 0.30, d: 0.30, h: 1.65, face: 'e', light: LAMP, notStyles: ['minimalista'] }),
   // pendientes sobre la mesa (industrial, boho, rústico, ecléctico, vintage)
@@ -117,9 +145,9 @@ export const FURNITURE = [
   P({ id: 'cabecero-d1', name: 'Cabecero tapizado', room: 'dorm1', kind: 'headboard', x: 2.36, z: 28.83, w: 1.60, d: 0.07, h: 1.00, y: 0.25, face: 'e', headboard: true }),
   night('mesita-d1a', 'dorm1', 'base', 2.55, 27.80, 'e'), night('mesita-d1b', 'dorm1', 'base', 2.55, 29.86, 'e'),
   P({ id: 'comoda-d1', name: 'Cómoda', room: 'dorm1', kind: 'sideboard', x: 5.00, z: 29.00, w: 1.20, d: 0.45, h: 0.80, legs: 0.18, face: 'w' }),
-  art('cuadro-d1', 'dorm1', 'base', 2.20, 28.83, 1.35, 1.0, 0.6, 'e'),
+  { ...art('cuadro-d1', 'dorm1', 'base', 2.20, 28.83, 1.45, 1.0, 0.6, 'e'), notStyles: ['boho', 'eclectico', 'industrial'] },
   rug('alfombra-d1', 'dorm1', 'base', 3.6, 28.83, 2.0, 1.4, 'e'),
-  plant('planta-d1', 'dorm1', 4.95, 30.12, 'zz', 2),
+  { ...plant('planta-d1', 'dorm1', 4.95, 30.12, 'zz', 2), notStyles: ['japandi'] },
 
   // ------------------------------------------------------------------ DORMITORIO 2 (libre: x 5,93..10,13 · z 27,62..30,42)
   bed('d2-cama1', 'dorm2', 'd2:dos', 9.13, 28.27, 0.90, 1.90, 'w', { throw: 'mustard' }), bed('d2-cama2', 'dorm2', 'd2:dos', 9.13, 29.77, 0.90, 1.90, 'w'),
@@ -141,7 +169,8 @@ export const FURNITURE = [
 
   desk('d2-mesa-o', 'dorm2', 'd2:despacho', 8.726, 30.10, 1.40, 'n'), chair('d2-silla-o', 'dorm2', 'd2:despacho', 8.726, 29.45, 's'),
   sofabed('d2-sofa-o', 'dorm2', 'd2:despacho', 8.40, 28.06, 's'),
-  shelf('d2-est-o', 'dorm2', 'd2:despacho', 9.95, 28.95, 0.80, 'w'),
+  { ...shelf('d2-est-o', 'dorm2', 'd2:despacho', 9.95, 28.95, 0.80, 'w'), notStyles: ['industrial'] },
+  P({ id: 'd2-taquilla', v: 'd2:despacho', name: 'Taquilla metálica', room: 'dorm2', kind: 'locker', x: 9.92, z: 28.95, w: 0.80, d: 0.38, h: 1.80, face: 'w', styles: ['industrial'] }),
   art('d2-cuadro-o', 'dorm2', 'd2:despacho', 8.40, 27.64, 1.45, 1.0, 0.6, 's'),
 
   // ------------------------------------------------------------------ DORMITORIO 3 (libre: x 7,0..10,73 · z 24,72..27,52)
@@ -161,7 +190,8 @@ export const FURNITURE = [
 
   desk('d3-mesa-o', 'dorm3', 'd3:despacho', 10.42, 26.27, 1.40, 'w'), chair('d3-silla-o', 'dorm3', 'd3:despacho', 9.72, 26.27, 'e'),
   sofabed('d3-sofa-o', 'dorm3', 'd3:despacho', 8.60, 27.09, 'n'),
-  shelf('d3-est-o', 'dorm3', 'd3:despacho', 8.8, 24.88, 0.90, 's'),
+  { ...shelf('d3-est-o', 'dorm3', 'd3:despacho', 8.8, 24.88, 0.90, 's'), notStyles: ['industrial'] },
+  P({ id: 'd3-taquilla', v: 'd3:despacho', name: 'Taquilla metálica', room: 'dorm3', kind: 'locker', x: 8.8, z: 24.91, w: 0.90, d: 0.38, h: 1.80, face: 's', styles: ['industrial'] }),
   art('d3-cuadro-o', 'dorm3', 'd3:despacho', 8.60, 27.50, 1.45, 1.0, 0.6, 'n'),
 
   // ------------------------------------------------------------------ DORMITORIO 4 (libre: x 7,0..10,73 · z 21,82..24,62)
@@ -181,8 +211,20 @@ export const FURNITURE = [
 
   desk('d4-mesa-o', 'dorm4', 'd4:despacho', 10.42, 23.00, 1.40, 'w'), chair('d4-silla-o', 'dorm4', 'd4:despacho', 9.72, 23.00, 'e'),
   sofabed('d4-sofa-o', 'dorm4', 'd4:despacho', 8.60, 22.24, 's'),
-  shelf('d4-est-o', 'dorm4', 'd4:despacho', 8.6, 24.45, 0.90, 'n'),
+  { ...shelf('d4-est-o', 'dorm4', 'd4:despacho', 8.6, 24.45, 0.90, 'n'), notStyles: ['industrial'] },
+  P({ id: 'd4-taquilla', v: 'd4:despacho', name: 'Taquilla metálica', room: 'dorm4', kind: 'locker', x: 8.6, z: 24.42, w: 0.90, d: 0.38, h: 1.80, face: 'n', styles: ['industrial'] }),
   art('d4-cuadro-o', 'dorm4', 'd4:despacho', 8.60, 21.83, 1.45, 1.0, 0.6, 's'),
+
+  // ------------------------------------------------------------------ PIEZAS PROPIAS DE CADA ESTILO
+  P({ id: 'huevo', name: 'Sillón huevo colgante de ratán', room: 'salon', kind: 'hangingChair', x: 6.95, z: 15.45, w: 0.80, d: 0.80, h: 2.0, face: 'w', styles: ['boho'] }),
+  P({ id: 'farol', name: 'Farol de papel de pie', room: 'salon', kind: 'lantern', x: 6.95, z: 15.30, w: 0.45, d: 0.45, h: 0.75, face: 's', styles: ['japandi'] }),
+  P({ id: 'cesto-salon', name: 'Cesto de fibra con manta', room: 'salon', kind: 'basket', x: 2.42, z: 18.55, w: 0.40, d: 0.40, h: 0.42, face: 'e', styles: ['mediterraneo', 'boho', 'nordico'] }),
+  P({ id: 'biombo-d1', name: 'Biombo de madera y papel', room: 'dorm1', kind: 'screen', x: 4.60, z: 30.15, w: 0.90, d: 0.30, h: 1.70, face: 'n', styles: ['japandi'] }),
+  P({ id: 'macrame-d1', name: 'Tapiz de macramé', room: 'dorm1', kind: 'macrame', x: 2.20, z: 28.83, y: 1.30, w: 0.9, d: 0.03, h: 0.8, face: 'e', wall: true, styles: ['boho'] }),
+  P({ id: 'galeria-d1', name: 'Pared de cuadros (galería)', room: 'dorm1', kind: 'gallery', x: 2.20, z: 28.83, y: 1.55, w: 1.7, d: 0.03, h: 0.9, face: 'e', wall: true, styles: ['eclectico', 'industrial'] }),
+  P({ id: 'baul-d2', v: 'd2:doble', name: 'Baúl de madera a los pies de la cama', room: 'dorm2', kind: 'trunk', x: 7.90, z: 29.0, w: 1.00, d: 0.45, h: 0.48, face: 'w', styles: ['rustico', 'boho', 'vintage'] }),
+  P({ id: 'cojines-d3', v: 'd3:juvenil', name: 'Cojines de suelo', room: 'dorm3', kind: 'floorCushion', x: 8.1, z: 25.6, w: 0.6, d: 0.6, h: 0.10, face: 's', walk: true, styles: ['boho', 'japandi'] }),
+  P({ id: 'banco-porche', name: 'Banco bajo de madera', room: 'porche', kind: 'lowBench', x: 1.0, z: 12.9, w: 1.6, d: 0.40, h: 0.45, face: 'e', styles: ['japandi', 'rustico', 'mediterraneo', 'boho'] }),
 
   // ------------------------------------------------------------------ LAVADERO
   P({ id: 'lavadora', name: 'Lavadora carga frontal', room: 'lavadero', kind: 'washer', x: 0.40, z: 26.82, w: 0.60, d: 0.60, h: 0.85, face: 'e' }),

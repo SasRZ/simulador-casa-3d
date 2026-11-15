@@ -147,6 +147,15 @@ export class UI {
     };
     $('eye').oninput = () => { const v = +$('eye').value; this.app.nav.setEye(v); $('eye-out').textContent = `${v.toFixed(2).replace('.', ',')} m`; };
     $('opt-floor').onchange = () => this.app.ctx.setFloor($('opt-floor').value);
+    $('opt-hall-door').onchange = () => { this.app.ctx.setHallSlider($('opt-hall-door').value); this.app.nav.invalidateTargets(); };
+    const paint = () => {
+      const ctx = this.app.ctx, M = ctx.M, w = $('opt-wall-color').value, c = $('opt-ceil-color').value;
+      ctx.paintWall = w ? parseInt(w, 16) : null;
+      if (ctx.paintWall != null) M.wall.color.setHex(ctx.paintWall);
+      else ctx.furn.setStyle(ctx.furn.selection.style);   // vuelve al color del estilo
+      M.ceiling.color.setHex(c === 'same' ? M.wall.color.getHex() : parseInt(c, 16));
+    };
+    $('opt-wall-color').onchange = paint; $('opt-ceil-color').onchange = paint;
     $('opt-kitchen').onchange = () => { G.kitchen.visible = $('opt-kitchen').checked; this.app.nav.invalidateTargets(); };
     $('opt-porch').onchange = () => { this.app.ctx.setPorch($('opt-porch').value); this.app.nav.invalidateTargets(); };
     $('opt-porch-glass').onchange = () => { this.app.ctx.setPorchGlass($('opt-porch-glass').checked); this.app.nav.invalidateTargets(); };
@@ -171,7 +180,7 @@ export class UI {
     // estilo
     $('furn-style').innerHTML = Object.entries(STYLES).map(([k, st]) => `<option value="${k}">${st.name}</option>`).join('');
     const styleInfo = () => { $('furn-style-info').textContent = STYLES[$('furn-style').value].note; };
-    $('furn-style').onchange = () => { fu.setStyle($('furn-style').value); styleInfo(); };
+    $('furn-style').onchange = () => { fu.setStyle($('furn-style').value); styleInfo(); if ($('opt-ceil-color').value === 'same') this.app.ctx.M.ceiling.color.copy(this.app.ctx.M.wall.color); this.app.nav.invalidateTargets(); };
     styleInfo();
     // uso de cada estancia
     const box = $('furn-uses');

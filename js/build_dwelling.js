@@ -317,3 +317,40 @@ function buildWardrobe(ctx, w) {
   }
   ctx.colliders.push({ x0: w.x0, z0: w.z0, x1: w.x1, z1: w.z1 });
 }
+
+// ---------------------------------------------------------------------------
+//  Opción: puerta corredera entre el vestíbulo y el distribuidor (propuesta, no viene en el plano)
+//  Hueco: x 5,326..6,427 en la línea del muro norte del baño 2 (z 21,017..21,115), más un tabique
+//  de remate en x 6,326..6,427 (z 21,115..21,715) para cerrar el lado del vestíbulo.
+//  La hoja corre por la cara del salón hacia la izquierda, delante del muro del baño 2.
+// ---------------------------------------------------------------------------
+export function buildHallSlider(ctx) {
+  const { M, G } = ctx;
+  const grp = new THREE.Group(); grp.name = 'corredera-distribuidor'; grp.visible = false; G.structure.add(grp);
+  const x0 = 5.326, x1 = 6.427, z0 = 21.017, z1 = 21.115, hd = 2.10, ceil = H.ceiling;
+  // dintel y tabique de remate hasta el techo
+  grp.add(worldBox(x0, hd, z0, x1, ceil, z1, M.wall));
+  grp.add(worldBox(6.326, 0, z1, 6.427, ceil, 21.715, M.wall));
+  // carril y cajón sobre la hoja (cara del salón)
+  const zl = z0 - 0.035, L = x1 - x0 + 0.08;
+  grp.add(box(x0 - L, hd, zl - 0.03, x1 + 0.04, hd + 0.08, zl + 0.03, M.white));
+  // hoja: lisa lacada blanca o con vidriera
+  const leaf = new THREE.Group(); leaf.position.set(x0 - 0.04, 0, zl); grp.add(leaf);
+  const solid = box(0, 0.01, -0.02, L, hd - 0.01, 0.02, M.door);
+  const glazed = new THREE.Group();
+  [[0, 0.01, 0.10, hd - 0.01], [L - 0.10, 0.01, L, hd - 0.01]].forEach(([a, y0, b, y1]) => glazed.add(box(a, y0, -0.02, b, y1, 0.02, M.door)));
+  [[0.01, 0.10], [hd - 0.10, hd - 0.01], [0.95, 1.03]].forEach(([y0, y1]) => glazed.add(box(0.10, y0, -0.02, L - 0.10, y1, 0.02, M.door)));
+  [[0.10, 0.95], [1.03, hd - 0.10]].forEach(([y0, y1]) => { const p = new THREE.Mesh(new THREE.PlaneGeometry(L - 0.2, y1 - y0), M.glass); p.position.set(L / 2, (y0 + y1) / 2, 0); glazed.add(p); });
+  leaf.add(solid, glazed);
+  const hnd = box(0.05, 0.95, 0.02, 0.07, 1.20, 0.035, M.chrome); leaf.add(hnd);
+  const col = { x0, z0: zl - 0.03, x1, z1 };
+  const op = new Openable('Puerta corredera vestíbulo–distribuidor', (e) => { leaf.position.x = x0 - 0.04 - e * (L - 0.12); }, col);
+  op.speed = 1.4;
+  addPickable(ctx, leaf, op); ctx.openables.push(op);
+  ctx.dynColliders.push({ box: col, fn: () => grp.visible && op.blocking });
+  ctx.dynColliders.push({ box: { x0: 6.326, z0: z1, x1: 6.427, z1: 21.715 }, fn: () => grp.visible });
+  ctx.setHallSlider = (k) => {
+    grp.visible = !!k;
+    solid.visible = k === 'lisa'; glazed.visible = k === 'vidriera';
+  };
+}

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { FURNITURE, STYLES, VARIANTS } from './furniture_data.js';
+import { FURNITURE, STYLES, VARIANTS, STYLE_ALIAS } from './furniture_data.js';
+import { makeStyled } from './build_styles.js';
 
 // Mobiliario propuesto. Cada pieza se construye en coordenadas locales (frente = +z, centro de la huella en x,z = 0,
 // suelo en y = 0) y luego se coloca y gira según `face`. Los colores salen del estilo elegido (STYLES).
@@ -34,6 +35,10 @@ function makeMats() {
   F.ceramicSand = std(0xd3bf9d, 0.5);
   F.white = std(0xf4f2ee, 0.5);
   F.frameMat = std(0x2b2b2b, 0.6);
+  F.dark = std(0x1d1d1f, 0.5, { metalness: 0.4 });
+  F.gold = std(0xc9a24a, 0.35, { metalness: 0.8 });
+  F.marble = std(0xeeece8, 0.25);
+  F.glassF = new THREE.MeshPhysicalMaterial({ color: 0xdfeef0, roughness: 0.05, transparent: true, opacity: 0.35 });
   F.metal = std(0xd6d4cd, 0.4, { metalness: 0.5 });
   F.inox = std(0xc9ccce, 0.35, { metalness: 0.55 });
   F.screen = std(0x16181b, 0.2, { metalness: 0.2 });
@@ -370,39 +375,48 @@ export function buildFurniture(ctx) {
   const shown = (it) => {
     if (it.v !== 'base') { const [room, opt] = it.v.split(':'); if (sel[room] !== opt) return false; }
     const st = STYLES[sel.style];
-    if (it.styles && !it.styles.includes(sel.style)) return false;
-    if (it.notStyles && it.notStyles.includes(sel.style)) return false;
+    const ss = [sel.style, STYLE_ALIAS[sel.style]].filter(Boolean);
+    if (it.styles && !ss.some((k) => it.styles.includes(k))) return false;
+    if (it.notStyles && ss.some((k) => it.notStyles.includes(k))) return false;
     if (it.minPlants && st.plants < it.minPlants) return false;
     return true;
   };
 
-  for (const it of FURNITURE) {
-    const build = B[it.kind]; if (!build) { console.warn('Sin constructor para', it.kind); continue; }
-    const g = new THREE.Group();
-    build(it, g, F, ctx);
-    const inner = new THREE.Group(); inner.add(g);
-    inner.position.set(it.x, it.y, it.z); inner.rotation.y = ROT[it.face];
-    inner.userData.item = it;
-    g.traverse((o) => { if (o.isMesh) { o.castShadow = o.castShadow !== false; o.receiveShadow = true; } });
-    ctx.furn.root.add(inner);
-    ctx.furn.items.push({ it, obj: inner });
-    if (g.userData.mode) ctx.furn.curtains.push({ it, g });
-    if (g.userData.lift) ctx.furn.lift.push(g.userData.lift);
-    if (isSolid(it)) {
-      const ns = it.face === 'n' || it.face === 's';
-      const dx = ns ? it.w : it.d, dz = ns ? it.d : it.w;
-      ctx.dynColliders.push({ box: { x0: it.x - dx / 2, z0: it.z - dz / 2, x1: it.x + dx / 2, z1: it.z + dz / 2 }, fn: () => ctx.furn.root.visible && inner.visible });
-    }
+  // Formas según estilo: los constructores de build_styles.js sustituyen a los genéricos
+  Object.assign(B, makeStyled({ bx, cy, sp, legs4, light, books }));
+  const visibleIds = new Set();
+  // colisiones: una por pieza, activas si la pieza se ve
+  for (const it of FURNITURE) if (isSolid(it)) {
+    const ns = it.face === 'n' || it.face === 's';
+    const dx = ns ? it.w : it.d, dz = ns ? it.d : it.w;
+    ctx.dynColliders.push({ box: { x0: it.x - dx / 2, z0: it.z - dz / 2, x1: it.x + dx / 2, z1: it.z + dz / 2 }, fn: () => ctx.furn.root.visible && visibleIds.has(it.id) });
   }
-  const refresh = () => ctx.furn.items.forEach(({ it, obj }) => { obj.visible = shown(it); });
+  // (Re)construye todas las piezas con el estilo actual
+  const buildAll = () => {
+    for (const { obj } of ctx.furn.items) { ctx.furn.root.remove(obj); obj.traverse((o) => { if (o.isMesh) o.geometry.dispose(); }); }
+    ctx.furn.items = []; ctx.furn.lights = []; ctx.furn.glow = [];
+    for (const it of FURNITURE) {
+      const build = B[it.kind]; if (!build) { console.warn('Sin constructor para', it.kind); continue; }
+      const g = new THREE.Group();
+      build(it, g, F, ctx);
+      const inner = new THREE.Group(); inner.add(g);
+      inner.position.set(it.x, it.y, it.z); inner.rotation.y = ROT[it.face];
+      inner.userData.item = it;
+      g.traverse((o) => { if (o.isMesh) { o.castShadow = o.castShadow !== false; o.receiveShadow = true; } });
+      ctx.furn.root.add(inner);
+      ctx.furn.items.push({ it, obj: inner });
+    }
+  };
+  const refresh = () => { visibleIds.clear(); ctx.furn.items.forEach(({ it, obj }) => { obj.visible = shown(it); if (obj.visible) visibleIds.add(it.id); }); };
   ctx.furn.setOption = (room, opt) => { sel[room] = opt; refresh(); };
   ctx.furn.setStyle = (id) => {
-    const st = STYLES[id]; if (!st) return; sel.style = id;
+    const st = STYLES[id]; if (!st) return; sel.style = id; F.style = id;
     const c = st.colors;
     for (const [k, hex] of Object.entries(c)) if (F[k]) F[k].color.setHex(hex);
     F.frameMat.color.setHex(c.frame ?? c.oak);
-    if (ctx.M && st.wall) ctx.M.wall.color.setHex(st.wall);
-    refresh();
+    if (ctx.M && st.wall && ctx.paintWall == null) ctx.M.wall.color.setHex(st.wall);
+    buildAll(); refresh(); ctx.furn.setLamps?.(lampState.on, lampState.lvl);
+    ctx.invalidate?.();
   };
   ctx.furn.selection = sel;
   ctx.furn.setCurtains = (closed) => {
@@ -413,7 +427,9 @@ export function buildFurniture(ctx) {
     });
   };
   ctx.furn.setLift = (up) => ctx.furn.lift.forEach((t) => { t.position.y = up ? 0.22 : 0; });
+  const lampState = { on: false, lvl: 1 };
   ctx.furn.setLamps = (on, bedroomLevel = 1) => {
+    lampState.on = on; lampState.lvl = bedroomLevel;
     ctx.furn.lights.forEach(({ L, I, group }) => { const k = group === 'bedroom' ? bedroomLevel : 1; L.intensity = on ? I * k : 0; L.visible = on && k > 0; });
     ctx.furn.glow.forEach((m) => { m.emissiveIntensity = on ? 1.4 : 0; });
   };
