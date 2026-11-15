@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { FURNITURE } from './furniture_data.js';
+import { FURNITURE, STYLES, VARIANTS } from './furniture_data.js';
 
 // Mobiliario propuesto. Cada pieza se construye en coordenadas locales (frente = +z, centro de la huella en x,z = 0,
-// suelo en y = 0) y luego se coloca y gira según `face`.  Estilo: nórdico + mediterráneo + japandi.
+// suelo en y = 0) y luego se coloca y gira según `face`. Los colores salen del estilo elegido (STYLES).
 
 const std = (color, roughness = 0.75, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness, ...extra });
 
@@ -33,6 +33,7 @@ function makeMats() {
   F.ceramic = std(0xf3efe6, 0.35);
   F.ceramicSand = std(0xd3bf9d, 0.5);
   F.white = std(0xf4f2ee, 0.5);
+  F.frameMat = std(0x2b2b2b, 0.6);
   F.metal = std(0xd6d4cd, 0.4, { metalness: 0.5 });
   F.inox = std(0xc9ccce, 0.35, { metalness: 0.55 });
   F.screen = std(0x16181b, 0.2, { metalness: 0.2 });
@@ -112,6 +113,15 @@ const B = {
   outdoorChair(it, g, F) {
     bx(g, 0.5, 0.04, 0.5, 0, 0.42, 0, F.white); legs4(g, 0.5, 0.5, 0.42, 0.03, F.metal, 0.03);
     bx(g, 0.5, 0.40, 0.04, 0, 0.44, -0.23, F.white);
+  },
+  frame(it, g, F) {
+    // Cuadro en la pared: marco y lámina abstracta con los colores del estilo
+    const { w, h } = it;
+    bx(g, w, h, 0.03, 0, 0, 0, F.frameMat);
+    bx(g, w - 0.08, h - 0.08, 0.004, 0, 0.04, 0.016, F.cream);
+    bx(g, (w - 0.2) * 0.55, (h - 0.2) * 0.6, 0.004, -(w - 0.2) * 0.2, 0.14, 0.02, F.sage);
+    bx(g, (w - 0.2) * 0.35, (h - 0.2) * 0.35, 0.004, (w - 0.2) * 0.25, 0.10 + (h - 0.2) * 0.5, 0.021, F.mustard);
+    cy(g, Math.min(w, h) * 0.12, Math.min(w, h) * 0.12, 0.004, (w - 0.2) * 0.2, 0.12, 0.022, F.petrol).rotation.x = Math.PI / 2;
   },
   tvUnit(it, g, F) {
     const { w, d, h, legs: lg } = it;
@@ -352,9 +362,19 @@ const isSolid = (f) => !f.wall && !f.walk && !f.marker && !f.onTop && f.y < 0.7 
 
 export function buildFurniture(ctx) {
   const F = makeMats();
-  ctx.furn = { F, lights: [], glow: [], groups: {}, items: [], curtains: [], lift: [], root: new THREE.Group() };
+  ctx.furn = { F, lights: [], glow: [], items: [], curtains: [], lift: [], root: new THREE.Group() };
   ctx.furn.root.name = 'furniture'; ctx.scene.add(ctx.furn.root); ctx.G.furniture = ctx.furn.root;
-  for (const v of ['base', 'salonA', 'salonB', 'd1A', 'd1B']) { const gr = new THREE.Group(); gr.name = v; ctx.furn.groups[v] = gr; ctx.furn.root.add(gr); }
+  // opción elegida por estancia (salón, dormitorios 2-4) y estilo
+  const sel = { style: Object.keys(STYLES)[0] };
+  for (const [room, opts] of Object.entries(VARIANTS)) sel[room] = Object.keys(opts)[0];
+  const shown = (it) => {
+    if (it.v !== 'base') { const [room, opt] = it.v.split(':'); if (sel[room] !== opt) return false; }
+    const st = STYLES[sel.style];
+    if (it.styles && !it.styles.includes(sel.style)) return false;
+    if (it.notStyles && it.notStyles.includes(sel.style)) return false;
+    if (it.minPlants && st.plants < it.minPlants) return false;
+    return true;
+  };
 
   for (const it of FURNITURE) {
     const build = B[it.kind]; if (!build) { console.warn('Sin constructor para', it.kind); continue; }
@@ -364,24 +384,27 @@ export function buildFurniture(ctx) {
     inner.position.set(it.x, it.y, it.z); inner.rotation.y = ROT[it.face];
     inner.userData.item = it;
     g.traverse((o) => { if (o.isMesh) { o.castShadow = o.castShadow !== false; o.receiveShadow = true; } });
-    ctx.furn.groups[it.v].add(inner);
+    ctx.furn.root.add(inner);
     ctx.furn.items.push({ it, obj: inner });
     if (g.userData.mode) ctx.furn.curtains.push({ it, g });
     if (g.userData.lift) ctx.furn.lift.push(g.userData.lift);
     if (isSolid(it)) {
       const ns = it.face === 'n' || it.face === 's';
       const dx = ns ? it.w : it.d, dz = ns ? it.d : it.w;
-      const gr = ctx.furn.groups[it.v];
-      const rects = it.kind === 'sofaL'
-        ? [[it.x - dx / 2, it.z - dz / 2, it.x + dx / 2, it.z + dz / 2]]
-        : [[it.x - dx / 2, it.z - dz / 2, it.x + dx / 2, it.z + dz / 2]];
-      rects.forEach(([x0, z0, x1, z1]) => ctx.dynColliders.push({ box: { x0, z0, x1, z1 }, fn: () => ctx.furn.root.visible && gr.visible }));
+      ctx.dynColliders.push({ box: { x0: it.x - dx / 2, z0: it.z - dz / 2, x1: it.x + dx / 2, z1: it.z + dz / 2 }, fn: () => ctx.furn.root.visible && inner.visible });
     }
   }
-  ctx.furn.setVariant = (salon, d1) => {
-    const gs = ctx.furn.groups;
-    gs.salonA.visible = salon === 'A'; gs.salonB.visible = salon === 'B'; gs.d1A.visible = d1 === 'A'; gs.d1B.visible = d1 === 'B';
+  const refresh = () => ctx.furn.items.forEach(({ it, obj }) => { obj.visible = shown(it); });
+  ctx.furn.setOption = (room, opt) => { sel[room] = opt; refresh(); };
+  ctx.furn.setStyle = (id) => {
+    const st = STYLES[id]; if (!st) return; sel.style = id;
+    const c = st.colors;
+    for (const [k, hex] of Object.entries(c)) if (F[k]) F[k].color.setHex(hex);
+    F.frameMat.color.setHex(c.frame ?? c.oak);
+    if (ctx.M && st.wall) ctx.M.wall.color.setHex(st.wall);
+    refresh();
   };
+  ctx.furn.selection = sel;
   ctx.furn.setCurtains = (closed) => {
     ctx.furn.curtains.forEach(({ g }) => {
       const m = g.userData.mode, k = closed ? m.closed : m.open;
@@ -389,13 +412,11 @@ export function buildFurniture(ctx) {
       if (g.userData.fabrics) g.userData.fabrics.forEach((f) => { f.scale.x = k; });
     });
   };
-  const SOFA_COLORS = { beige: [0xb59468, 0xc4a67c], perla: [0xa4a8ac, 0xb9bdc0] };
-  ctx.furn.setSofaColor = (k) => { const [a, b] = SOFA_COLORS[k] || SOFA_COLORS.beige; F.sofa.color.setHex(a); F.sofaSoft.color.setHex(b); };
   ctx.furn.setLift = (up) => ctx.furn.lift.forEach((t) => { t.position.y = up ? 0.22 : 0; });
   ctx.furn.setLamps = (on, bedroomLevel = 1) => {
     ctx.furn.lights.forEach(({ L, I, group }) => { const k = group === 'bedroom' ? bedroomLevel : 1; L.intensity = on ? I * k : 0; L.visible = on && k > 0; });
     ctx.furn.glow.forEach((m) => { m.emissiveIntensity = on ? 1.4 : 0; });
   };
   ctx.furn.setEnabled = (on) => { ctx.furn.root.visible = on; };
-  ctx.furn.setVariant('A', 'A'); ctx.furn.setCurtains(false); ctx.furn.setLamps(false);
+  ctx.furn.setStyle(sel.style); ctx.furn.setCurtains(false); ctx.furn.setLamps(false);
 }

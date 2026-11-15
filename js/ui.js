@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { CFG, ESTIMATES } from './config.js';
 import { ROOMS, ROOM_LIGHT_GROUPS } from './plan.js';
-import { FURNITURE, VARIANTS, AVISOS, ROOM_NAMES } from './furniture_data.js';
+import { FURNITURE, VARIANTS, VARIANT_LABELS, STYLES, AVISOS, ROOM_NAMES } from './furniture_data.js';
 const GHOST = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: THREE.DoubleSide });
 import { sunPosition, localToUtc, sunTimes, fmtMin, bearingName } from './sun.js';
 
@@ -168,11 +168,20 @@ export class UI {
   // ---------------------------------------------------------------- amueblado
   _furniture() {
     const fu = this.app.ctx.furn;
-    const fill = (id, obj) => { $(id).innerHTML = Object.entries(obj).map(([k, t]) => `<option value="${k}">${t}</option>`).join(''); };
-    fill('furn-salon', VARIANTS.salon); fill('furn-d1', VARIANTS.d1);
-    const sync = () => { fu.setVariant($('furn-salon').value, $('furn-d1').value); this.app.nav.invalidateTargets(); };
-    $('furn-salon').onchange = sync; $('furn-d1').onchange = sync;
-    $('furn-sofa').onchange = () => fu.setSofaColor($('furn-sofa').value);
+    // estilo
+    $('furn-style').innerHTML = Object.entries(STYLES).map(([k, st]) => `<option value="${k}">${st.name}</option>`).join('');
+    const styleInfo = () => { $('furn-style-info').textContent = STYLES[$('furn-style').value].note; };
+    $('furn-style').onchange = () => { fu.setStyle($('furn-style').value); styleInfo(); };
+    styleInfo();
+    // uso de cada estancia
+    const box = $('furn-uses');
+    for (const [room, opts] of Object.entries(VARIANTS)) {
+      const l = document.createElement('label'); l.className = 'row';
+      l.innerHTML = `<span>${VARIANT_LABELS[room] || room}</span><select>${Object.entries(opts).map(([k, t]) => `<option value="${k}">${t}</option>`).join('')}</select>`;
+      const sel = l.querySelector('select');
+      sel.onchange = () => { fu.setOption(room, sel.value); this.app.nav.invalidateTargets(); };
+      box.appendChild(l);
+    }
     $('opt-furn').onchange = () => { fu.setEnabled($('opt-furn').checked); this.app.nav.invalidateTargets(); };
     $('opt-curtains').onchange = () => fu.setCurtains($('opt-curtains').checked);
     $('opt-lift').onchange = () => fu.setLift($('opt-lift').checked);
@@ -188,14 +197,14 @@ export class UI {
   _furnList() {
     const n = (v) => v.toFixed(2).replace('.', ',');
     const byRoom = {};
-    FURNITURE.filter((f) => !f.marker && !f.curtain || f.curtain).forEach((f) => { (byRoom[f.room] ||= []).push(f); });
-    let html = '<p class="info">Medidas en metros: ancho × fondo × alto. Todo es propuesta (no sale del plano).</p>';
+    this.app.ctx.furn.items.filter(({ obj }) => obj.visible).map(({ it }) => it).forEach((f) => { (byRoom[f.room] ||= []).push(f); });
+    let html = `<p class="info">Estilo: <b>${STYLES[this.app.ctx.furn.selection.style].name}</b>. Medidas en metros: ancho × fondo × alto. Todo es propuesta (no sale del plano).</p>`;
     for (const [room, list] of Object.entries(byRoom)) {
       html += `<h3>${ROOM_NAMES[room] || room}</h3><table><tr><th>Pieza</th><th>Ancho × fondo × alto (m)</th><th>Variante</th></tr>`;
       for (const f of list) {
         const ns = true; const w = f.w, d = f.d;
         const dims = f.curtain ? `${n(f.w)} × — × ${n(f.h)}` : `${n(w)} × ${n(d)} × ${n(f.h)}`;
-        const v = f.v === 'base' ? '' : f.v.replace('salon', 'Salón ').replace('d1', 'D1 ');
+        const v = f.v === 'base' ? '' : (VARIANTS[f.v.split(':')[0]] || {})[f.v.split(':')[1]] || '';
         html += `<tr><td>${f.name}${f.note ? `<br><small>${f.note}</small>` : ''}</td><td class="n">${dims}</td><td>${v}</td></tr>`;
       }
       html += '</table>';
