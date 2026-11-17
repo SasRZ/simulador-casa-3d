@@ -106,3 +106,8 @@ body.touch #labels div { font-size: 10px; }
 body.touch #labels div small { font-size: 9px; }
 body.touch .card { padding: 14px; width: 96vw; max-height: 90vh; }
 body.touch #hint { top: auto; bottom: calc(160px + env(safe-area-inset-bottom)); }
+
+#loading .glfail { max-width: 420px; padding: 0 20px; text-align: left; gap: 10px; }
+#loading .glfail b:first-child { font-size: 1.1em; }
+#loading .glfail ol { margin: 0; padding-left: 20px; color: var(--muted); line-height: 1.5; }
+#loading .glfail button { align-self: flex-start; padding: 8px 16px; border-radius: 8px; border: 0; background: #3ddc84; color: #111; font-weight: 600; cursor: pointer; }

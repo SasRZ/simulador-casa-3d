@@ -18,11 +18,43 @@ import { UI } from './ui.js';
 const msg = (t) => { const e = document.getElementById('loading-msg'); if (e) e.textContent = t; };
 const nextFrame = () => new Promise((r) => setTimeout(r, 16));
 
+// Crea el renderizador probando opciones cada vez más ligeras: algunos móviles y tabletas
+// rechazan 'high-performance' o el antialias, sobre todo tras un fallo previo de la GPU.
+function createRenderer(canvas, touch) {
+  const tries = [
+    { antialias: !touch, powerPreference: 'high-performance' },
+    { antialias: false, powerPreference: 'default' },
+    { antialias: false, powerPreference: 'low-power', failIfMajorPerformanceCaveat: false, precision: 'mediump' },
+  ];
+  let last;
+  for (let i = 0; i < tries.length; i++) {
+    try { return { renderer: new THREE.WebGLRenderer({ canvas, ...tries[i] }), lite: i > 0 }; }
+    catch (e) { last = e; console.warn('WebGL no disponible con', tries[i], e); }
+  }
+  const err = new Error(last && last.message || 'WebGL no disponible'); err.webgl = true; throw err;
+}
+
+function showGLProblem(why) {
+  let el = document.getElementById('loading');
+  if (!el) { el = document.createElement('div'); el.id = 'loading'; document.body.appendChild(el); }
+  el.classList.remove('done');
+  el.innerHTML = `<div class="glfail"><b>No se puede mostrar el 3D</b>
+    <span>${why}</span>
+    <span>Suele arreglarse así:</span>
+    <ol>
+      <li>Cierra <b>todas</b> las pestañas y sal de Chrome por completo (en Android: botón de apps recientes y desliza Chrome fuera).</li>
+      <li>Vuelve a abrir Chrome y entra otra vez en la página.</li>
+      <li>Si sigue igual, reinicia el dispositivo o prueba en otro navegador.</li>
+    </ol>
+    <button onclick="location.reload()">Reintentar</button></div>`;
+}
+
 async function boot() {
   const canvas = document.getElementById('c');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
   const touch = document.body.classList.contains('touch');
-  renderer.setPixelRatio(Math.min(devicePixelRatio, touch ? 1.5 : 2));
+  const { renderer, lite } = createRenderer(canvas, touch);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, lite ? 1 : touch ? 1.5 : 2));
+  canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); showGLProblem('La tarjeta gráfica se ha quedado sin memoria y el navegador ha detenido el 3D.'); });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.6;
@@ -56,8 +88,9 @@ async function boot() {
   app.env = createEnvironment(app);
   app.nav = new Navigation(app);
   app.ui = new UI(app);
-  app.env.setShadows(true, !touch);
-  if (touch) { document.getElementById('opt-hq').checked = false; app.ui.togglePanel(true); }
+  app.env.setShadows(true, !touch && !lite);
+  if (touch || lite) document.getElementById('opt-hq').checked = false;
+  if (touch) { app.ui.togglePanel(true); }
   app.ui.applyTime();
   window.__app = app;   // útil para depurar desde la consola
 
@@ -84,4 +117,8 @@ async function boot() {
   loading.classList.add('done'); setTimeout(() => loading.remove(), 700);
 }
 
-boot().catch((e) => { console.error(e); document.getElementById('loading-msg').textContent = 'Error: ' + e.message; });
+boot().catch((e) => {
+  console.error(e);
+  if (e.webgl || /WebGL/i.test(e.message)) showGLProblem('El navegador no deja crear el contexto 3D (WebGL). Pasa cuando la tarjeta gráfica ha fallado antes en esta sesión y Chrome lo bloquea temporalmente.');
+  else document.getElementById('loading-msg').textContent = 'Error: ' + e.message;
+});
