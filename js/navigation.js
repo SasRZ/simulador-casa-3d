@@ -61,7 +61,7 @@ export class Navigation {
   _bind() {
     const dom = this.dom;
     addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
       const k = e.code; this.keys[k] = true;
       if (k === 'KeyE' && this.mode === 'walk') this.interact();
       if (k === 'KeyM') this.app.ui?.toggleMeasure();
@@ -101,6 +101,11 @@ export class Navigation {
       const click = this._down && Math.hypot(e.clientX - this._down.x, e.clientY - this._down.y) < (e.pointerType === 'touch' ? 10 : 5);
       if (!click) return;
       if (this.measureOn) { this._measureClick(e); return; }
+      if (this.app.notes?.placing) {
+        const ndc = this.mode === 'walk' && this.locked ? new THREE.Vector2(0, 0) : this._ndcFromEvent(e);
+        const h = this._ray(ndc)[0];
+        this.app.notes.place(h ? h.point : (this._floorPoint(e) || null)); return;
+      }
       if (this.mode === 'walk') {
         if (!this.locked) { if (e.pointerType === 'mouse') dom.requestPointerLock?.(); if (!was?.moved) this.interact(e); } else this.interact();
       } else this.interact(e);

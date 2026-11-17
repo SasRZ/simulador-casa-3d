@@ -194,6 +194,7 @@ export class UI {
     $('opt-pool-light').onchange = () => this.app.ctx.setPoolLights($('opt-pool-light').checked);
     $('opt-env').onchange = () => { G.envContext.visible = $('opt-env').checked; };
     $('opt-labels').onchange = () => { this.labelsOn = $('opt-labels').checked; };
+    $('opt-areas').onchange = () => document.body.classList.toggle('no-areas', !$('opt-areas').checked);
     const sh = () => this.app.env.setShadows($('opt-shadows').checked, $('opt-hq').checked);
     $('opt-shadows').onchange = sh; $('opt-hq').onchange = sh;
   }
