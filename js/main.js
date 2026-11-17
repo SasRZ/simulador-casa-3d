@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { CFG } from './config.js';
-import { makeMaterials, setAnisotropy } from './materials.js';
+import { makeMaterials, setAnisotropy, setMaxTexture } from './materials.js';
 import { buildDwelling, buildHallSlider } from './build_dwelling.js';
 import { buildKitchen, buildIsland } from './build_kitchen.js';
 import { buildBaths } from './build_baths.js';
@@ -53,14 +53,22 @@ function showGLProblem(why) {
 async function boot() {
   const canvas = document.getElementById('c');
   const touch = document.body.classList.contains('touch');
-  const { renderer, lite } = createRenderer(canvas, touch);
-  renderer.setPixelRatio(Math.min(devicePixelRatio, lite ? 1 : touch ? 1.5 : 2));
+  const made = createRenderer(canvas, touch);
+  const renderer = made.renderer;
+  // Modo ligero: automático en móviles/tabletas o si la GPU rechazó el modo normal.
+  // Se fuerza con ?ligero=1 o se desactiva con ?ligero=0 en la dirección.
+  const qp = new URLSearchParams(location.search).get('ligero');
+  const lite = qp === '1' || (qp !== '0' && (touch || made.lite));
+  if (lite) document.body.classList.add('lite');
+  renderer.setPixelRatio(lite ? 1 : Math.min(devicePixelRatio, 2));
   canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); showGLProblem('La tarjeta gráfica se ha quedado sin memoria y el navegador ha detenido el 3D.'); });
+  canvas.addEventListener('webglcontextrestored', () => { const l = document.getElementById('loading'); if (l) l.remove(); });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.6;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  setAnisotropy(Math.min(8, renderer.capabilities.getMaxAnisotropy()));
+  setAnisotropy(Math.min(lite ? 2 : 8, renderer.capabilities.getMaxAnisotropy()));
+  if (lite) setMaxTexture(512);
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x9fb6cc);
@@ -90,8 +98,9 @@ async function boot() {
   app.nav = new Navigation(app);
   app.ui = new UI(app);
   app.notes = new Notes(app);
-  app.env.setShadows(true, !touch && !lite);
-  if (touch || lite) document.getElementById('opt-hq').checked = false;
+  // En modo ligero las sombras empiezan apagadas (doblan el trabajo de la GPU); se pueden activar en el menú.
+  app.env.setShadows(!lite, !lite);
+  if (lite) { document.getElementById('opt-hq').checked = false; document.getElementById('opt-shadows').checked = false; }
   if (touch) { app.ui.togglePanel(true); }
   app.ui.applyTime();
   window.__app = app;   // útil para depurar desde la consola
@@ -100,9 +109,18 @@ async function boot() {
   const clock = new THREE.Clock();
   let hoverT = 0;
   const hint = document.getElementById('hint');
+  // Render bajo demanda: sólo se dibuja cuando algo cambia (cámara, puertas, animación del sol,
+  // o justo después de tocar/teclear/cambiar algo). Así la GPU descansa cuando la vista está quieta.
+  let lastInput = performance.now(), lastDraw = 0;
+  const poke = () => { lastInput = performance.now(); };
+  ['pointerdown', 'pointermove', 'pointerup', 'wheel', 'keydown', 'keyup', 'input', 'change', 'click', 'touchstart', 'touchmove'].forEach((ev) => addEventListener(ev, poke, { passive: true, capture: true }));
+  addEventListener('resize', poke);
+  app.invalidate = poke;
+  const lastCam = new Float32Array(16);
   renderer.setAnimationLoop(() => {
     const dt = Math.min(0.05, clock.getDelta());
-    ctx.openables.forEach((o) => o.update(dt));
+    let busy = false;
+    ctx.openables.forEach((o) => { if (o.t !== o.target) busy = true; o.update(dt); });
     app.nav.update(dt);
     app.ui.tick(dt);
     app.ui.updateLabels();
@@ -114,7 +132,13 @@ async function boot() {
       hint.hidden = !h;
       if (h) hint.textContent = `${h.t > 0.5 ? 'Cerrar' : 'Abrir'}: ${h.name}  ${touch ? '(toca)' : '(clic o E)'}`;
     }
-    renderer.render(scene, app.nav.camera);
+    const cam = app.nav.camera; cam.updateMatrixWorld();
+    const m = cam.matrixWorld.elements; let moved = false;
+    for (let i = 0; i < 16; i++) if (Math.abs(m[i] - lastCam[i]) > 1e-6) { moved = true; lastCam[i] = m[i]; }
+    const now = performance.now();
+    if (moved || busy || app.ui.playing || now - lastInput < 800 || now - lastDraw > 2000) {
+      renderer.render(scene, cam); lastDraw = now;
+    }
   });
   const loading = document.getElementById('loading');
   loading.classList.add('done'); setTimeout(() => loading.remove(), 700);

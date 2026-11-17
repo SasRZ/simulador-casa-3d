@@ -2,12 +2,20 @@
 import * as THREE from 'three';
 
 let _aniso = 8;
+let _maxTex = 0;   // 0 = sin límite; en modo ligero se reducen las texturas para no agotar la GPU
 export function setAnisotropy(n) { _aniso = n; }
+export function setMaxTexture(n) { _maxTex = n; }
+function shrink(c) {
+  if (!_maxTex || (c.width <= _maxTex && c.height <= _maxTex)) return c;
+  const k = _maxTex / Math.max(c.width, c.height);
+  const d = document.createElement('canvas'); d.width = Math.round(c.width * k); d.height = Math.round(c.height * k);
+  d.getContext('2d').drawImage(c, 0, 0, d.width, d.height); return d;
+}
 
 function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 
 function tex(canvas, repeat = true, srgb = true) {
-  const t = new THREE.CanvasTexture(canvas);
+  const t = new THREE.CanvasTexture(shrink(canvas));
   t.wrapS = t.wrapT = repeat ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
   t.anisotropy = _aniso;
   if (srgb) t.colorSpace = THREE.SRGBColorSpace;
