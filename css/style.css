@@ -111,3 +111,25 @@ body.touch #hint { top: auto; bottom: calc(160px + env(safe-area-inset-bottom));
 #loading .glfail b:first-child { font-size: 1.1em; }
 #loading .glfail ol { margin: 0; padding-left: 20px; color: var(--muted); line-height: 1.5; }
 #loading .glfail button { align-self: flex-start; padding: 8px 16px; border-radius: 8px; border: 0; background: #3ddc84; color: #111; font-weight: 600; cursor: pointer; }
+/* ---------- notas ---------- */
+#notes-layer { position: fixed; inset: 0; pointer-events: none; z-index: 3; overflow: hidden; }
+#notes-layer[hidden] { display: none; }
+#notes-layer .pin { position: absolute; transform: translate(-11px, -100%); display: flex; align-items: flex-end; gap: 4px; pointer-events: auto; cursor: pointer; transition: opacity .2s; }
+#notes-layer .pin b { width: 22px; height: 22px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; color: #111; font-size: 11px; box-shadow: 0 1px 4px rgba(0,0,0,.6); border: 2px solid #fff; flex: none; }
+#notes-layer .pin span { background: rgba(18,22,28,.88); color: #fff; font-size: 12px; padding: 3px 8px; border-radius: 8px; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+#notes-layer .pin:hover span { white-space: normal; max-width: 280px; }
+#notes-layer .pin.behind { opacity: .4; }
+#notes-list { list-style: none; padding: 0; margin: 6px 0; display: flex; flex-direction: column; gap: 4px; }
+#notes-list li { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.05); border-radius: 8px; padding: 4px 6px; }
+#notes-list li.empty { color: var(--muted); background: none; font-size: 12px; }
+#notes-list .dot { width: 18px; height: 18px; border-radius: 50%; color: #111; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none; }
+#notes-list .tx { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+#notes-list button { background: none; border: 0; color: var(--fg); cursor: pointer; padding: 2px 4px; font-size: 13px; }
+.note-editor { position: fixed; z-index: 8; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(340px, 92vw); background: var(--panel); backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.note-editor[hidden] { display: none; }
+.note-editor textarea { width: 100%; resize: vertical; background: rgba(0,0,0,.3); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font: inherit; font-size: 16px; }
+#note-colors { display: flex; gap: 8px; }
+#note-colors button { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+#note-colors button.on { border-color: #fff; }
+body.placing-note #c { cursor: crosshair; }
+body.no-areas #labels div small { display: none; }

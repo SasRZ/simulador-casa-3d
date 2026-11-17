@@ -14,6 +14,7 @@ import { buildExterior } from './build_exterior.js';
 import { createEnvironment } from './environment.js';
 import { Navigation } from './navigation.js';
 import { UI } from './ui.js';
+import { Notes } from './notes.js';
 
 const msg = (t) => { const e = document.getElementById('loading-msg'); if (e) e.textContent = t; };
 const nextFrame = () => new Promise((r) => setTimeout(r, 16));
@@ -88,6 +89,7 @@ async function boot() {
   app.env = createEnvironment(app);
   app.nav = new Navigation(app);
   app.ui = new UI(app);
+  app.notes = new Notes(app);
   app.env.setShadows(true, !touch && !lite);
   if (touch || lite) document.getElementById('opt-hq').checked = false;
   if (touch) { app.ui.togglePanel(true); }
@@ -104,6 +106,7 @@ async function boot() {
     app.nav.update(dt);
     app.ui.tick(dt);
     app.ui.updateLabels();
+    app.notes.update(dt);
     hoverT += dt;
     if (hoverT > 0.12) {
       hoverT = 0;

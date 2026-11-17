@@ -120,6 +120,8 @@
       <h2>Mostrar</h2>
       <label class="row"><input type="checkbox" id="opt-env" checked> Entorno (calles, árboles y casas vecinas estimadas)</label>
       <label class="row"><input type="checkbox" id="opt-labels" checked> Nombres de estancias</label>
+      <label class="row"><input type="checkbox" id="opt-areas" checked> Medidas de las estancias (m²)</label>
+      <label class="row"><input type="checkbox" id="opt-notes" checked> Notas</label>
       <label class="row"><input type="checkbox" id="opt-shadows" checked> Sombras</label>
       <label class="row"><input type="checkbox" id="opt-hq" checked> Alta calidad de sombra</label>
     </section>
@@ -127,6 +129,22 @@
     <section>
       <h2>Ir a…</h2>
       <div class="chips" id="rooms"></div>
+    </section>
+
+    <section>
+      <h2>Notas <small id="note-count"></small></h2>
+      <div class="chips">
+        <button id="note-add">📌 Añadir nota</button>
+        <button id="note-toggle">🙈 Ocultar notas</button>
+      </div>
+      <ul id="notes-list"></ul>
+      <div class="chips">
+        <button id="note-export" title="Descarga un archivo con todas las notas">⬇ Exportar</button>
+        <button id="note-import" title="Carga notas de un archivo exportado">⬆ Importar</button>
+        <button id="note-clear">Borrar todas</button>
+        <input type="file" id="note-file" accept=".json,application/json" hidden>
+      </div>
+      <p class="info" id="notes-info">Se guardan en este navegador. Para verlas en otro dispositivo, expórtalas e impórtalas allí.</p>
     </section>
 
     <section>
@@ -142,6 +160,12 @@
   </div>
 </aside>
 
+<div id="notes-layer"></div>
+<div id="note-editor" class="note-editor" hidden>
+  <textarea id="note-text" rows="4" placeholder="Escribe la nota… (Ctrl+Intro guarda)"></textarea>
+  <div class="row-c"><div id="note-colors"></div></div>
+  <div class="chips"><button id="note-save" class="on">Guardar</button><button id="note-cancel">Cancelar</button><button id="note-del">Borrar</button></div>
+</div>
 <div id="help"></div>
 <div id="joy" hidden><div id="joy-knob"></div></div>
 
