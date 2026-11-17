@@ -35,7 +35,7 @@ function createRenderer(canvas, touch) {
   const err = new Error(last && last.message || 'WebGL no disponible'); err.webgl = true; throw err;
 }
 
-function showGLProblem(why) {
+function showGLProblem(why, offerUltra) {
   let el = document.getElementById('loading');
   if (!el) { el = document.createElement('div'); el.id = 'loading'; document.body.appendChild(el); }
   el.classList.remove('done');
@@ -47,7 +47,7 @@ function showGLProblem(why) {
       <li>Vuelve a abrir Chrome y entra otra vez en la página.</li>
       <li>Si sigue igual, reinicia el dispositivo o prueba en otro navegador.</li>
     </ol>
-    <button onclick="location.reload()">Reintentar</button></div>`;
+    ${offerUltra ? '<button onclick="location.href=location.pathname+\'?ligero=2\'">Recargar en modo muy ligero</button>' : '<button onclick="location.reload()">Reintentar</button>'}</div>`;
 }
 
 async function boot() {
@@ -57,18 +57,27 @@ async function boot() {
   const renderer = made.renderer;
   // Modo ligero: automático en móviles/tabletas o si la GPU rechazó el modo normal.
   // Se fuerza con ?ligero=1 o se desactiva con ?ligero=0 en la dirección.
+  // Niveles: 0 normal · 1 ligero (auto en táctiles) · 2 muy ligero (auto si la GPU ya falló en este dispositivo).
   const qp = new URLSearchParams(location.search).get('ligero');
-  const lite = qp === '1' || (qp !== '0' && (touch || made.lite));
+  let saved = null; try { saved = localStorage.getItem('villa04-ligero'); } catch (e) {}
+  if (qp === '0' || qp === '1') { try { localStorage.removeItem('villa04-ligero'); } catch (e) {} saved = null; }
+  const level = qp === '0' ? 0 : qp === '2' || saved === '2' ? 2 : qp === '1' || touch || made.lite ? 1 : 0;
+  const lite = level > 0, ultra = level === 2;
   if (lite) document.body.classList.add('lite');
-  renderer.setPixelRatio(lite ? 1 : Math.min(devicePixelRatio, 2));
-  canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); showGLProblem('La tarjeta gráfica se ha quedado sin memoria y el navegador ha detenido el 3D.'); });
+  renderer.setPixelRatio(ultra ? 0.75 : lite ? 1 : Math.min(devicePixelRatio, 2));
+  canvas.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault();
+    // La GPU de este dispositivo no aguanta: la próxima vez arrancamos en modo muy ligero.
+    try { localStorage.setItem('villa04-ligero', '2'); } catch (err) {}
+    showGLProblem('La tarjeta gráfica se ha quedado sin memoria y el navegador ha detenido el 3D.', !ultra);
+  });
   canvas.addEventListener('webglcontextrestored', () => { const l = document.getElementById('loading'); if (l) l.remove(); });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.6;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   setAnisotropy(Math.min(lite ? 2 : 8, renderer.capabilities.getMaxAnisotropy()));
-  if (lite) setMaxTexture(512);
+  if (lite) setMaxTexture(ultra ? 256 : 512);
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x9fb6cc);

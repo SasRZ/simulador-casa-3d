@@ -33,6 +33,8 @@ export class UI {
   onMode(m) {
     [...$('mode-seg').children].forEach((b) => b.classList.toggle('on', b.dataset.mode === m));
     $('crosshair').hidden = m !== 'walk';
+    // En pantallas táctiles el menú tapa el joystick: lo cerramos al empezar a caminar.
+    if (m === 'walk' && document.body.classList.contains('touch')) this.togglePanel(true);
     this.applyRoof(); this.updateHelp();
     this.app.nav.invalidateTargets();
   }

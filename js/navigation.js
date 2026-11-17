@@ -39,7 +39,7 @@ export class Navigation {
     // --- Caminar ---
     this.eye = CFG.H.eye;
     this.pos = new THREE.Vector3(9.4, 0, 20.95);
-    this.yaw = 0; this.pitch = 0;
+    this.yaw = 90 * DEG; this.pitch = 0;   // empieza en el vestíbulo mirando hacia dentro (antes miraba a la pared)
     this.keys = {};
     this.locked = false;
     this.radius = 0.23;
