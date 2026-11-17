@@ -34,21 +34,65 @@
     <button id="panel-toggle" title="Ocultar panel">◀</button>
   </header>
   <div class="scroll">
-    <section>
-      <h2>Vista</h2>
+    <section class="top">
       <div class="seg" id="mode-seg">
         <button data-mode="orbit" class="on">Órbita</button>
         <button data-mode="walk">Caminar</button>
         <button data-mode="top">Planta</button>
       </div>
-      <label class="row"><input type="checkbox" id="opt-roof"> Techos y plantas superiores</label>
-      <label class="row"><span>Corte horizontal</span><input type="range" id="clip" min="0.3" max="3.6" step="0.05" value="3.6"><output id="clip-out">off</output></label>
-      <label class="row"><span>Altura de ojos</span><input type="range" id="eye" min="1.0" max="1.95" step="0.01" value="1.65"><output id="eye-out">1,65 m</output></label>
+      <div class="quick" id="quick">
+        <label><input type="checkbox" id="q-labels" checked> Nombres</label>
+        <label><input type="checkbox" id="q-areas" checked> m²</label>
+        <label><input type="checkbox" id="q-notes" checked> Notas</label>
+        <label><input type="checkbox" id="q-furn" checked> Muebles</label>
+      </div>
     </section>
-
-    <section>
-      <h2>Sol y hora <small>(Entrenúcleos · hora de Madrid)</small></h2>
-      <div class="row2"><input type="date" id="date"><input type="time" id="time" step="60"></div>
+    <details class="sec" id="sec-vista" open>
+      <summary>👁 Vista y recorrido</summary>
+      <div class="sec-body">
+        <label class="row"><input type="checkbox" id="opt-roof"> Techos y plantas superiores</label>
+        <label class="row"><span>Corte horizontal</span><input type="range" id="clip" min="0.3" max="3.6" step="0.05" value="3.6"><output id="clip-out">off</output></label>
+        <label class="row"><span>Altura de ojos</span><input type="range" id="eye" min="1.0" max="1.95" step="0.01" value="1.65"><output id="eye-out">1,65 m</output></label>
+        <h3 class="sub">Ir a…</h3>
+        <div class="chips" id="rooms"></div>
+      </div>
+    </details>
+    <details class="sec" id="sec-mostrar">
+      <summary>🏷 Qué se ve</summary>
+      <div class="sec-body">
+        <label class="row"><input type="checkbox" id="opt-labels" checked> Nombres de estancias</label>
+        <label class="row"><input type="checkbox" id="opt-areas" checked> Medidas de las estancias (m²)</label>
+        <label class="row"><input type="checkbox" id="opt-notes" checked> Notas</label>
+        <label class="row"><input type="checkbox" id="opt-furn" checked> Muebles</label>
+        <label class="row"><input type="checkbox" id="opt-env" checked> Entorno (calles, árboles y casas vecinas estimadas)</label>
+        <label class="row"><input type="checkbox" id="opt-shadows" checked> Sombras</label>
+        <label class="row"><input type="checkbox" id="opt-hq" checked> Alta calidad de sombra</label>
+      </div>
+    </details>
+    <details class="sec" id="sec-notas">
+      <summary>📌 Notas y medidas <small><span id="note-count"></span></small></summary>
+      <div class="sec-body">
+        <div class="chips">
+        <button id="note-add">📌 Añadir nota</button>
+        <button id="note-toggle">🙈 Ocultar notas</button>
+      </div>
+        <ul id="notes-list"></ul>
+        <div class="chips">
+        <button id="note-export" title="Descarga un archivo con todas las notas">⬇ Exportar</button>
+        <button id="note-import" title="Carga notas de un archivo exportado">⬆ Importar</button>
+        <button id="note-clear">Borrar todas</button>
+        <input type="file" id="note-file" accept=".json,application/json" hidden>
+      </div>
+        <p class="info" id="notes-info">Se guardan en este navegador. Para verlas en otro dispositivo, expórtalas e impórtalas allí.</p>
+        <h3 class="sub">Medir</h3>
+        <div class="chips"><button id="measure" title="Atajo: M">📏 Medir</button><button id="measure-clear">Borrar medida</button></div>
+        <p id="measure-info" class="info"></p>
+      </div>
+    </details>
+    <details class="sec" id="sec-sol">
+      <summary>☀️ Sol y hora <small>hora de Madrid</small></summary>
+      <div class="sec-body">
+        <div class="row2"><input type="date" id="date"><input type="time" id="time" step="60"></div>
       <input type="range" id="time-range" min="0" max="1439" step="1" value="720">
       <div class="row2">
         <button id="play">▶ Animar</button>
@@ -58,105 +102,89 @@
         <button data-t="sunrise">Amanecer</button><button data-t="noon">Mediodía solar</button><button data-t="sunset">Atardecer</button><button data-t="night">Noche</button>
       </div>
       <p id="sun-info" class="info"></p>
-    </section>
-
-    <section>
-      <h2>Decoración <small>(propuesta)</small></h2>
-      <label class="row"><input type="checkbox" id="opt-furn" checked> <b>Mostrar muebles</b></label>
-      <label class="row"><span>Estilo</span><select id="furn-style"></select></label>
-      <p class="info" id="furn-style-info"></p>
-      <div id="furn-uses"></div>
-      <label class="row"><span>Tamaño de la tele</span><select id="opt-tv"><option value="65">65" (1,45 × 0,84 m)</option><option value="75">75" (1,67 × 0,96 m)</option><option value="85">85" (1,89 × 1,08 m)</option><option value="98" selected>98" (2,17 × 1,22 m)</option></select></label>
-      <label class="row"><span>Mesa del comedor</span><select id="opt-dining"><option value="plano">Como el plano</option><option value="oeste">Desplazada hacia el salón (deja sitio a la isla)</option><option value="corredera">Junto a la corredera del porche</option><option value="girada">Girada 90º</option><option value="libre" hidden>Colocada a mano</option></select></label>
-      <div class="chips"><button id="dining-rot">↻ Girar mesa 90º</button></div>
-      <p class="info">Para moverla a tu gusto: en «Planta» u «Órbita», arrastra la mesa (o una silla) con el ratón o el dedo.</p>
-      <label class="row"><input type="checkbox" id="opt-curtains"> Cortinas y estores cerrados</label>
-      <label class="row" hidden><input type="checkbox" id="opt-lift"> Mesa de centro elevada</label>
-      <label class="row"><input type="checkbox" id="opt-lamps"> Lámparas encendidas (2700 K)</label>
-      <label class="row"><span>Regulable dormitorio</span><input type="range" id="lamp-dim" min="0" max="100" step="5" value="60"><output id="lamp-dim-out">60 %</output></label>
-      <div class="chips"><button id="furn-list">Lista de muebles y avisos</button></div>
-    </section>
-
-    <section>
-      <h2>Luces interiores <small>(focos empotrados)</small></h2>
-      <label class="row"><input type="checkbox" id="lights-all"> <b>Todas</b></label>
-      <div id="lights-rooms"></div>
-    </section>
-
-    <section>
-      <h2>Acabados <small>(memoria de calidades)</small></h2>
-      <label class="row"><span>Suelo</span><select id="opt-floor"></select></label>
-      <p class="info">Tonos aproximados: el color exacto se elige en el catálogo de la promotora (Porcelanosa o tarima AC6).</p>
-      <label class="row"><span>Corredera vestíbulo–distribuidor</span><select id="opt-hall-door"><option value="">Sin puerta (como el plano)</option><option value="lisa">Lisa lacada blanca</option><option value="vidriera">Con vidriera</option></select></label>
-      <h3 class="sub">Paleta de colores</h3>
-      <div class="swatches" id="palettes"></div>
-      <label class="row"><span>Paredes</span><select id="opt-wall-color"></select></label>
-      <label class="row"><span>Pared de acento</span><select id="opt-accent-color"></select></label>
-      <label class="row"><span>Techo</span><select id="opt-ceil-color"></select></label>
-      <p class="info">La pared de acento es la de la TV del salón y la de los cabeceros de los dormitorios.</p>
-      <label class="row"><input type="checkbox" id="opt-kitchen" checked> Muebles de cocina del plano (se entrega sin muebles)</label>
-      <label class="row"><input type="checkbox" id="opt-island"> Isla de cocina 90 × 180 con 3 taburetes</label>
-    </section>
-
-    <section>
-      <h2>Exterior</h2>
-      <label class="row"><span>Cubierta del porche</span><select id="opt-porch"><option value="lamas">Pérgola de lamas</option><option value="losa">Losa maciza</option></select></label>
-      <label class="row"><input type="checkbox" id="opt-porch-glass"> Porche acristalado (cristalera corredera)</label>
-      <label class="row"><span>Pérgola con toldo en el aparcamiento</span><select id="opt-carport"><option value="">Sin pérgola</option><option value="arena">Toldo de lona arena</option><option value="gris">Toldo de lona gris antracita</option><option value="blanco">Toldo de lona blanco</option><option value="lamas">Lamas fijas de aluminio</option></select></label>
-      <label class="row" id="row-carport-len" hidden><span>Largo de la pérgola</span><select id="opt-carport-len"><option value="dos">Toda la zona (12 m, 2 coches)</option><option value="uno">1 coche (5,6 m, junto a la puerta)</option></select></label>
-      <label class="row"><span>Plantas en los muros</span><select id="opt-wallplants"><option value="">Sin plantas</option><option value="seto">Seto de arbustos (aligustre)</option><option value="hiedra">Trepadora: hiedra</option><option value="jazmin">Trepadora: jazmín (flor blanca)</option><option value="bignonia">Trepadora: bignonia (flor naranja)</option><option value="seto_jazmin">Seto + jazmín en el resto</option></select></label>
-      <label class="row"><span>Coches en el aparcamiento</span><select id="opt-cars"><option value="2" selected>2 coches (gris plata y blanco)</option><option value="1">1 coche</option><option value="0">Sin coches</option></select></label>
-      <label class="row" id="row-cars-pos"><span>Colocación de los coches</span><select id="opt-cars-pos"><option value="plano">En fila, como el plano</option><option value="puerta">En fila, más cerca de la puerta</option><option value="calle">Uno dentro y otro en la calle</option><option value="dos_calle">Los dos en la calle</option><option value="libre" hidden>Colocados a mano</option></select></label>
-      <div class="chips" id="row-cars-rot"><button id="car-rot">↻ Girar coche 90º</button></div>
-      <p class="info" id="cars-info">Para moverlos: en «Planta» u «Órbita», arrastra un coche con el ratón o el dedo. No atraviesan muros, la casa, la piscina ni el otro coche. «Girar» gira el último coche que hayas tocado (con la tecla R también).</p>
-      <label class="row"><span>Placas solares</span><select id="opt-solar"><option value="">Sin placas</option><option value="p10">10 placas (≈ 4,5 kW)</option><option value="p20">21 placas (≈ 9,5 kW)</option></select></label>
-      <label class="row"><span>Tamaño de la piscina</span><select id="opt-pool-size"><option value="6x3">6 × 3 m (plano)</option><option value="7.5x3">7,5 × 3 m</option></select></label>
-      <label class="row"><span>Borde de la piscina</span><select id="opt-coping"><option value="marmolina">Marmolina blanca</option><option value="madera">Porcelánico imitación madera</option></select></label>
-      <label class="row"><input type="checkbox" id="opt-pool-light"> Luces de la piscina</label>
-      <p class="info">Clic en la puerta peatonal, en la corredera de coches o en la cristalera del porche para abrirlas.</p>
-    </section>
-
-    <section>
-      <h2>Mostrar</h2>
-      <label class="row"><input type="checkbox" id="opt-env" checked> Entorno (calles, árboles y casas vecinas estimadas)</label>
-      <label class="row"><input type="checkbox" id="opt-labels" checked> Nombres de estancias</label>
-      <label class="row"><input type="checkbox" id="opt-areas" checked> Medidas de las estancias (m²)</label>
-      <label class="row"><input type="checkbox" id="opt-notes" checked> Notas</label>
-      <label class="row"><input type="checkbox" id="opt-shadows" checked> Sombras</label>
-      <label class="row"><input type="checkbox" id="opt-hq" checked> Alta calidad de sombra</label>
-    </section>
-
-    <section>
-      <h2>Ir a…</h2>
-      <div class="chips" id="rooms"></div>
-    </section>
-
-    <section>
-      <h2>Notas <small id="note-count"></small></h2>
-      <div class="chips">
-        <button id="note-add">📌 Añadir nota</button>
-        <button id="note-toggle">🙈 Ocultar notas</button>
       </div>
-      <ul id="notes-list"></ul>
-      <div class="chips">
-        <button id="note-export" title="Descarga un archivo con todas las notas">⬇ Exportar</button>
-        <button id="note-import" title="Carga notas de un archivo exportado">⬆ Importar</button>
-        <button id="note-clear">Borrar todas</button>
-        <input type="file" id="note-file" accept=".json,application/json" hidden>
+    </details>
+    <details class="sec" id="sec-deco">
+      <summary>🛋 Muebles y decoración</summary>
+      <div class="sec-body">
+        <label class="row"><span>Estilo</span><select id="furn-style"></select></label>
+        <p class="info" id="furn-style-info"></p>
+        <div id="furn-uses"></div>
+        <h3 class="sub">Salón y comedor</h3>
+        <label class="row"><span>Tamaño de la tele</span><select id="opt-tv"><option value="65">65" (1,45 × 0,84 m)</option><option value="75">75" (1,67 × 0,96 m)</option><option value="85">85" (1,89 × 1,08 m)</option><option value="98" selected>98" (2,17 × 1,22 m)</option></select></label>
+        <label class="row"><span>Mesa del comedor</span><select id="opt-dining"><option value="plano">Como el plano</option><option value="oeste">Desplazada hacia el salón (deja sitio a la isla)</option><option value="corredera">Junto a la corredera del porche</option><option value="girada">Girada 90º</option><option value="libre" hidden>Colocada a mano</option></select></label>
+        <div class="chips"><button id="dining-rot">↻ Girar mesa 90º</button></div>
+        <p class="info">Para moverla a tu gusto: en «Planta» u «Órbita», arrastra la mesa (o una silla) con el ratón o el dedo.</p>
+        <h3 class="sub">Cocina</h3>
+        <label class="row"><input type="checkbox" id="opt-kitchen" checked> Muebles de cocina del plano (se entrega sin muebles)</label>
+        <label class="row"><input type="checkbox" id="opt-island"> Isla de cocina 90 × 180 con 3 taburetes</label>
+        <h3 class="sub">Textiles</h3>
+        <label class="row"><input type="checkbox" id="opt-curtains"> Cortinas y estores cerrados</label>
+        <label class="row" hidden><input type="checkbox" id="opt-lift"> Mesa de centro elevada</label>
+        <div class="chips"><button id="furn-list">Lista de muebles y avisos</button></div>
       </div>
-      <p class="info" id="notes-info">Se guardan en este navegador. Para verlas en otro dispositivo, expórtalas e impórtalas allí.</p>
-    </section>
-
-    <section>
-      <h2>Herramientas</h2>
-      <div class="chips">
-        <button id="measure" title="Atajo: M">📏 Medir</button>
-        <button id="measure-clear">Borrar</button>
-        <button id="shot">📷 Captura</button>
-        <button id="est">Datos estimados</button>
+    </details>
+    <details class="sec" id="sec-acabados">
+      <summary>🎨 Suelos, colores y puertas</summary>
+      <div class="sec-body">
+        <label class="row"><span>Suelo</span><select id="opt-floor"></select></label>
+        <p class="info">Tonos aproximados: el color exacto se elige en el catálogo de la promotora (Porcelanosa o tarima AC6).</p>
+        <h3 class="sub">Paleta de colores</h3>
+        <div class="swatches" id="palettes"></div>
+        <label class="row"><span>Paredes</span><select id="opt-wall-color"></select></label>
+        <label class="row"><span>Pared de acento</span><select id="opt-accent-color"></select></label>
+        <label class="row"><span>Techo</span><select id="opt-ceil-color"></select></label>
+        <p class="info">La pared de acento es la de la TV del salón y la de los cabeceros de los dormitorios.</p>
+        <h3 class="sub">Puertas</h3>
+        <label class="row"><span>Corredera vestíbulo–distribuidor</span><select id="opt-hall-door"><option value="">Sin puerta (como el plano)</option><option value="lisa">Lisa lacada blanca</option><option value="vidriera">Con vidriera</option></select></label>
       </div>
-      <p id="measure-info" class="info"></p>
-    </section>
+    </details>
+    <details class="sec" id="sec-luces">
+      <summary>💡 Luces</summary>
+      <div class="sec-body">
+        <h3 class="sub">Focos empotrados</h3>
+        <label class="row"><input type="checkbox" id="lights-all"> <b>Todas</b></label>
+        <div id="lights-rooms"></div>
+        <h3 class="sub">Lámparas</h3>
+        <label class="row"><input type="checkbox" id="opt-lamps"> Lámparas encendidas (2700 K)</label>
+        <label class="row"><span>Regulable dormitorio</span><input type="range" id="lamp-dim" min="0" max="100" step="5" value="60"><output id="lamp-dim-out">60 %</output></label>
+      </div>
+    </details>
+    <details class="sec" id="sec-porche">
+      <summary>🏡 Porche y cubierta</summary>
+      <div class="sec-body">
+        <label class="row"><span>Cubierta del porche</span><select id="opt-porch"><option value="lamas">Pérgola de lamas</option><option value="losa">Losa maciza</option></select></label>
+        <label class="row"><input type="checkbox" id="opt-porch-glass"> Porche acristalado (cristalera corredera)</label>
+        <label class="row"><span>Placas solares</span><select id="opt-solar"><option value="">Sin placas</option><option value="p10">10 placas (≈ 4,5 kW)</option><option value="p20">21 placas (≈ 9,5 kW)</option></select></label>
+      </div>
+    </details>
+    <details class="sec" id="sec-jardin">
+      <summary>🌳 Jardín y piscina</summary>
+      <div class="sec-body">
+        <label class="row"><span>Tamaño de la piscina</span><select id="opt-pool-size"><option value="6x3">6 × 3 m (plano)</option><option value="7.5x3">7,5 × 3 m</option></select></label>
+        <label class="row"><span>Borde de la piscina</span><select id="opt-coping"><option value="marmolina">Marmolina blanca</option><option value="madera">Porcelánico imitación madera</option></select></label>
+        <label class="row"><input type="checkbox" id="opt-pool-light"> Luces de la piscina</label>
+        <label class="row"><span>Plantas en los muros</span><select id="opt-wallplants"><option value="">Sin plantas</option><option value="seto">Seto de arbustos (aligustre)</option><option value="hiedra">Trepadora: hiedra</option><option value="jazmin">Trepadora: jazmín (flor blanca)</option><option value="bignonia">Trepadora: bignonia (flor naranja)</option><option value="seto_jazmin">Seto + jazmín en el resto</option></select></label>
+        <p class="info">Clic en la puerta peatonal, en la corredera de coches o en la cristalera del porche para abrirlas.</p>
+      </div>
+    </details>
+    <details class="sec" id="sec-parking">
+      <summary>🚗 Aparcamiento</summary>
+      <div class="sec-body">
+        <label class="row"><span>Pérgola con toldo en el aparcamiento</span><select id="opt-carport"><option value="">Sin pérgola</option><option value="arena">Toldo de lona arena</option><option value="gris">Toldo de lona gris antracita</option><option value="blanco">Toldo de lona blanco</option><option value="lamas">Lamas fijas de aluminio</option></select></label>
+        <label class="row" id="row-carport-len" hidden><span>Largo de la pérgola</span><select id="opt-carport-len"><option value="dos">Toda la zona (12 m, 2 coches)</option><option value="uno">1 coche (5,6 m, junto a la puerta)</option></select></label>
+        <label class="row"><span>Coches en el aparcamiento</span><select id="opt-cars"><option value="2" selected>2 coches (gris plata y blanco)</option><option value="1">1 coche</option><option value="0">Sin coches</option></select></label>
+        <label class="row" id="row-cars-pos"><span>Colocación de los coches</span><select id="opt-cars-pos"><option value="plano">En fila, como el plano</option><option value="puerta">En fila, más cerca de la puerta</option><option value="calle">Uno dentro y otro en la calle</option><option value="dos_calle">Los dos en la calle</option><option value="libre" hidden>Colocados a mano</option></select></label>
+        <div class="chips" id="row-cars-rot"><button id="car-rot">↻ Girar coche 90º</button></div>
+        <p class="info" id="cars-info">Para moverlos: en «Planta» u «Órbita», arrastra un coche con el ratón o el dedo. No atraviesan muros, la casa, la piscina ni el otro coche. «Girar» gira el último coche que hayas tocado (con la tecla R también).</p>
+      </div>
+    </details>
+    <details class="sec" id="sec-mas">
+      <summary>🛠 Más</summary>
+      <div class="sec-body">
+        <div class="chips"><button id="shot">📷 Captura</button><button id="est">Datos estimados</button></div>
+      </div>
+    </details>
   </div>
 </aside>
 

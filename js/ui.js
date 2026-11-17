@@ -194,6 +194,17 @@ export class UI {
     $('opt-pool-light').onchange = () => this.app.ctx.setPoolLights($('opt-pool-light').checked);
     $('opt-env').onchange = () => { G.envContext.visible = $('opt-env').checked; };
     $('opt-labels').onchange = () => { this.labelsOn = $('opt-labels').checked; };
+    // atajos de arriba (Nombres · m² · Notas · Muebles) sincronizados con las casillas de «Qué se ve»
+    [['q-labels', 'opt-labels'], ['q-areas', 'opt-areas'], ['q-notes', 'opt-notes'], ['q-furn', 'opt-furn']].forEach(([q, o]) => {
+      $(q).addEventListener('change', () => { $(o).checked = $(q).checked; $(o).dispatchEvent(new Event('change')); });
+      $(o).addEventListener('change', () => { $(q).checked = $(o).checked; });
+    });
+    // secciones plegables: recordar cuáles están abiertas
+    let open = null; try { open = JSON.parse(localStorage.getItem('villa04-menu') || 'null'); } catch { /* */ }
+    document.querySelectorAll('details.sec').forEach((d) => {
+      if (open) d.open = open.includes(d.id); else if (document.body.classList.contains('touch')) d.open = false;
+      d.addEventListener('toggle', () => { try { localStorage.setItem('villa04-menu', JSON.stringify([...document.querySelectorAll('details.sec[open]')].map((x) => x.id))); } catch { /* */ } });
+    });
     $('opt-areas').onchange = () => document.body.classList.toggle('no-areas', !$('opt-areas').checked);
     const sh = () => this.app.env.setShadows($('opt-shadows').checked, $('opt-hq').checked);
     $('opt-shadows').onchange = sh; $('opt-hq').onchange = sh;

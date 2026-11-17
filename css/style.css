@@ -133,3 +133,19 @@ body.touch #hint { top: auto; bottom: calc(160px + env(safe-area-inset-bottom));
 #note-colors button.on { border-color: #fff; }
 body.placing-note #c { cursor: crosshair; }
 body.no-areas #labels div small { display: none; }
+
+/* ---------- menú por secciones plegables ---------- */
+section.top { padding: 10px 0 8px; }
+.quick { display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; gap: 4px; margin-top: 8px; font-size: 12px; }
+.quick label { display: flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap; }
+details.sec { border-top: 1px solid var(--line); }
+details.sec > summary { list-style: none; cursor: pointer; padding: 10px 2px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; user-select: none; }
+details.sec > summary::-webkit-details-marker { display: none; }
+details.sec > summary::after { content: '›'; margin-left: auto; font-size: 18px; line-height: 1; color: var(--muted); transition: transform .15s; }
+details.sec[open] > summary::after { transform: rotate(90deg); }
+details.sec > summary small { color: var(--muted); font-weight: 400; font-size: 11px; }
+details.sec > summary:hover { color: var(--accent); }
+details.sec .sec-body { padding: 0 0 12px; }
+details.sec .sec-body > h3.sub:first-child { margin-top: 0; }
+body.touch details.sec > summary { padding: 13px 2px; font-size: 14px; }
+body.touch .quick { font-size: 13px; }

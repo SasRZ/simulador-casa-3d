@@ -116,7 +116,7 @@ export class Notes {
       d.onclick = (e) => { e.stopPropagation(); this._openEditor(n); };
       this.layer.appendChild(d); this.pins.push({ d, n });
     });
-    this.layer.hidden = !this.visible; $('opt-notes').checked = this.visible;
+    this.layer.hidden = !this.visible; $('opt-notes').checked = this.visible; $('q-notes').checked = this.visible;
   }
   // cada fotograma: proyectar marcadores; cada 0,3 s, atenuar los que quedan detrás de un muro
   update(dt) {
